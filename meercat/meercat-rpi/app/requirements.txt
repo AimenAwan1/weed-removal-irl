@@ -1,0 +1,10 @@
+RPi.GPIO
+adafruit-circuitpython-bno08x
+adafruit-blinka
+adafruit-extended-bus
+pynmea2
+adafruit-circuitpython-charlcd
+RPLCD
+smbus2
+colorama
+protobuf==3.20.1

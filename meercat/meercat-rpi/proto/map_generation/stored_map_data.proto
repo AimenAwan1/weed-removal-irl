@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package meercat;
+
+import "sensor_data/gnss_data.proto";
+import "sensor_data/imu_data.proto";
+
+message Stored_Map_Data {
+    oneof sensor_oneof {
+        GNSS_Data gnss = 2;
+        IMU_Data imu = 3;
+    }
+}

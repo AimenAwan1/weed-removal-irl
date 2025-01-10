@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package meercat;
+
+message IMU_Data {
+    uint64 timestamp_ms = 1;
+    
+    message Linear_Accel_Data {
+        double accel_x = 1;
+        double accel_y = 2;
+        double accel_z = 3;
+    }
+
+    Linear_Accel_Data linear_accel = 2;
+
+    message Ang_Vel_Data {
+        double ang_vel_x = 1;
+        double ang_vel_y = 2;
+        double ang_vel_z = 3;
+    }
+
+    Ang_Vel_Data ang_vel = 3;
+
+    message Rot_Vec_Data {
+        double quat_i = 1;
+        double quat_j = 2;
+        double quat_k = 3;
+        double quat_real = 4;
+    }
+
+    Rot_Vec_Data rot_vec = 4;
+}

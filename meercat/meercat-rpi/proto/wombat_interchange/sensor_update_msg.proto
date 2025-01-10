@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package meercat;
+
+import "sensor_data/gnss_data.proto";
+import "sensor_data/imu_data.proto";
+
+message Sensor_Update_Msg {
+    uint32 sequence_num = 1;
+    uint32 timestamp_ms = 2;
+    optional GNSS_Data gnss_data = 3;
+    optional IMU_Data imu_data = 4;
+}

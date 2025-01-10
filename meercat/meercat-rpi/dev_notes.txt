@@ -1,0 +1,1 @@
+- originally had the GNSS working over serial -> need to use I2C as the UART port needs to be available instead for the communication with wombat

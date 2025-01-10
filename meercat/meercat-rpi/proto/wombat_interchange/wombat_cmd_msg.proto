@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package meercat;
+
+enum WombatCmdEnum {
+    START_SENSOR_UPDATE_MODE = 0;
+    STOP_SENSOR_UPDATE_MODE = 1;
+    GET_FULL_MAP_SEQUENCE_MSGS = 2;
+    REPEAT_MAP_SEQUENCE_MSG = 3;
+}
+
+message WombatGetFullMapSequenceMsgs_Payload {
+    uint32 map_num = 1;
+}
+
+message WombatRepeatMapSequenceMsg_Payload {
+    uint32 map_num = 1;
+    uint32 repeat_seq_num = 2;
+}
+
+message WombatCmdMsg {
+    WombatCmdEnum cmd_enum = 1;
+    oneof payload {
+        WombatGetFullMapSequenceMsgs_Payload full = 2;
+        WombatRepeatMapSequenceMsg_Payload repeat = 3;
+    }
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package meercat;
+
+message GNSS_Data {
+    uint64 timestamp_ms = 1;
+    double longitude_deg = 2;
+    double latitude_deg = 3;
+}

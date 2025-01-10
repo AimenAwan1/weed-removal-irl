@@ -1,0 +1,16 @@
+proj_name = "meercat-rpi"
+
+[proj]
+app_name = "app"
+proj_path = "/home/sastreet/meercat-rpi"
+venv_name = "venv"
+
+[exec]
+default_entry = "src/main.py"
+setup_script = "setup.sh"
+run_script = "run.sh"
+
+[rpi]
+hostname = "10.0.0.57"
+password = "%rpi%00"
+username = "sastreet"
