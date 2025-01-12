@@ -1,0 +1,3 @@
+int64 yard_id  # always 0 for now
+---
+GNSSPos[] positions # list of positions from scan
