@@ -6,7 +6,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             Node(
-                package="meercat_if",
+                package="wombat_meercat_if",
                 namespace="meercat_if",
                 executable="node",
                 name="meercat_if",

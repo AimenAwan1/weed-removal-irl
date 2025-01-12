@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'meercat_if'
+package_name = 'wombat_meercat_if'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'node = meercat_if.meercat_if_node:main'
+            'node = wombat_meercat_if.meercat_if_node:main'
         ],
     },
 )
