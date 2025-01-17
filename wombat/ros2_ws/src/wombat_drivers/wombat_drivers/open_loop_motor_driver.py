@@ -86,6 +86,9 @@ class OpenLoopMotorDriver(Node):
             # disables both PWM inputs when in the desert
             GPIO.output(fwd_enable_pin, GPIO.LOW)
             GPIO.output(rev_enable_pin, GPIO.LOW)
+
+            self.pca.channels[fwd_pwm_idx] = 0x0000
+            self.pca.channels[rev_pwm_idx] = 0x0000
         else:
             pwm_duty = WHEEL_SPEED_MAX_PWM_DUTY / WHEEL_SPEED_MAX_RADPS * abs(speed_rpm)
             clamped_pwm_duty = min(pwm_duty, WHEEL_SPEED_MAX_PWM_DUTY)
