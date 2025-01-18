@@ -28,8 +28,8 @@ class DifferentialDrive(Node):
         )
 
     def chassis_vel_callback(self, msg: Twist):
-        self.get_logger().debug(
-            self, f"Chassis speed command received: v={msg.linear.x}, w={msg.angular.z}"
+        self.get_logger().info(
+            f"Chassis speed command received: v={msg.linear.x}, w={msg.angular.z}"
         )
         chassis_speed = msg.linear.x
         chassis_ang_vel = msg.angular.z
