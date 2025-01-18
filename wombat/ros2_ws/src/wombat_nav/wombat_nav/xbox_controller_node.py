@@ -17,7 +17,7 @@ class XboxControllerNode(Node):
 
         self.cmd_vel_pub = self.create_publisher(
             Twist,
-            '/cmd_vel',
+            '/chassis_vel',
             10
         )
 
