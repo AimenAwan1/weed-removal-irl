@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'differential_drive_node = wombat_nav.differential_drive:main'
+            'differential_drive_node = wombat_nav.differential_drive:main',
+            'xbox_controller_node = wombat_drivers.xbox_controller_node:main'
         ],
     },
 )

@@ -21,8 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'wheel_velocity_node = wombat_drivers.wheel_velocity_node:main',
-            'open_loop_motor_driver_node = wombat_drivers.open_loop_motor_driver:main',
-            'xbox_controller_node = wombat_drivers.xbox_controller_node:main'
+            'open_loop_motor_driver_node = wombat_drivers.open_loop_motor_driver:main'
         ],
     },
 )
