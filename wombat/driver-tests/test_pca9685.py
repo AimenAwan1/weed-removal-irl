@@ -5,5 +5,5 @@ i2c = board.I2C()
 
 pca = PCA9685(i2c)
 
-pca.frequency = 60
-pca.channels[0].duty_cycle = 0x7FFF
+pca.frequency = 1000
+pca.channels[0].duty_cycle = 0x3333
