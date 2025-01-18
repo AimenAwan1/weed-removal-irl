@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'differential_drive_node = wombat_nav.differential_drive:main',
-            'xbox_controller_node = wombat_drivers.xbox_controller_node:main'
+            'xbox_controller_node = wombat_nav.xbox_controller_node:main'
         ],
     },
 )

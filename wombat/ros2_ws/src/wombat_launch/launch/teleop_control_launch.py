@@ -14,6 +14,6 @@ def generate_launch_description():
                 package='wombat_nav',
                 executable='differential_drive_node',
                 name='differential_drive_node'
-            )
+            ),
         ]
     )
