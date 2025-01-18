@@ -24,11 +24,11 @@ class XboxControllerNode(Node):
     def joy_callback(self, msg):
         twist = Twist()
 
-        twist.linear.x = msg.axes[1]  #left stick vertical
-        twist.angular.z = msg.axes[3] #right stick horizontal
+        twist.linear.x = 0.5 * msg.axes[1]  #left stick vertical
+        twist.angular.z = 0.5 * msg.axes[3] #right stick horizontal
 
         self.cmd_vel_pub.publish(twist)
-        self.get_logger().info(f'Published linear velocity: {twist.linear.x}, angular velocity: {twist.linear.z}')
+        self.get_logger().info(f'Published linear velocity: {twist.linear.x}, angular velocity: {twist.angular.z}')
         
 def main(args=None):
     rclpy.init(args=args)
