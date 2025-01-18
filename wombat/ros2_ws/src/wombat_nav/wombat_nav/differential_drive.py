@@ -13,7 +13,7 @@ CHASSIS_WIDTH_M = 0.4508
 
 class DifferentialDrive(Node):
     def __init__(self):
-        super.__init__("differential_driver_node")
+        super().__init__("differential_driver_node")
 
         self.chassis_speed_subscription = self.create_subscription(
             Float32, CHASSIS_SPEED_TOPIC, self.chassis_speed_callback, 10
@@ -50,3 +50,15 @@ class DifferentialDrive(Node):
 
         self.left_wheel_speed_publisher.publish(Float32(data=left_wheel_speed_radps))
         self.right_wheel_speed_publisher.publish(Float32(data=right_wheel_speed_radps))
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    differential_drive = DifferentialDrive()
+    rclpy.spin(differential_drive)
+
+    differential_drive.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == "__main__":
+    main()
