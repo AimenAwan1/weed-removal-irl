@@ -33,12 +33,14 @@ class DifferentialDrive(Node):
         self.chassis_ang_vel = 0
 
     def chassis_speed_callback(self, msg: Float32):
-        self.get_logger().info(f"Speed received: {msg.data}")
+        self.get_logger().debug(f"Speed received: {msg.data}")
         self.chassis_speed = msg.data
+        self.publish_wheel_speeds()
 
     def chassis_ang_vel_callback(self, msg: Float32):
-        self.get_logger().info(f"Angular velocity received: {msg.data}")
+        self.get_logger().debug(f"Angular velocity received: {msg.data}")
         self.chassis_ang_vel = msg.data
+        self.publish_wheel_speeds()
 
     def publish_wheel_speeds(self):
         right_wheel_speed_radps = (

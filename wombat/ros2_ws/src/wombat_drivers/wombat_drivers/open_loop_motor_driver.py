@@ -11,11 +11,11 @@ from std_msgs.msg import Float32
 
 # left/right wheel driver
 
-LEFT_WHEEL_SPEED_TOPIC = "left_wheel_speed_rpm"
+LEFT_WHEEL_SPEED_TOPIC = "left_wheel_speed_radps"
 LEFT_FWD_PWM_PCA_IDX = 0
 LEFT_REV_PWM_PCA_IDX = 1
 
-RIGHT_WHEEL_SPEED_TOPIC = "right_wheel_speed_rpm"
+RIGHT_WHEEL_SPEED_TOPIC = "right_wheel_speed_radps"
 RIGHT_FWD_PWM_PCA_IDX = 2
 RIGHT_REV_PWM_PCA_IDX = 3
 
@@ -23,7 +23,7 @@ DEFAULT_PCA_FREQ = 1000  # Hz
 
 WHEEL_SPEED_MAX_PWM_DUTY = 0xCCCC  # 80%
 WHEEL_SPEED_MAX_RADPS = 1.5
-WHEEL_SPEED_DEADZONE_RADPS = 0.1
+WHEEL_SPEED_DEADZONE_RADPS = 0.025
 
 
 class OpenLoopMotorDriver(Node):
@@ -73,18 +73,16 @@ class OpenLoopMotorDriver(Node):
             clamped_pwm_duty = int(min(pwm_duty, WHEEL_SPEED_MAX_PWM_DUTY))
 
             if speed_rpm > 0 and not reverse:
-                self.get_logger().info(f"Forward set: speed={speed_rpm}, reverse={reverse}")
                 # forward wheel movement is requested
                 self.pca.channels[rev_pwm_idx].duty_cycle = 0x0000
                 self.pca.channels[fwd_pwm_idx].duty_cycle = clamped_pwm_duty
             else:
-                self.get_logger().info(f"Reverse set: speed={speed_rpm}, reverse={reverse}")
                 # reverse wheel movement is requested
                 self.pca.channels[fwd_pwm_idx].duty_cycle = 0x0000
                 self.pca.channels[rev_pwm_idx].duty_cycle = clamped_pwm_duty
 
     def left_wheel_speed_callback(self, msg: Float32):
-        self.get_logger().info(f"Setting left wheel speed: {msg.data}")
+        self.get_logger().info(f"Left wheel speed being set: {msg.data} radps")
 
         self.set_wheel_speed_signals(
             msg.data,
@@ -94,7 +92,7 @@ class OpenLoopMotorDriver(Node):
         )
 
     def right_wheel_speed_callback(self, msg: Float32):
-        self.get_logger().info(f"Setting right wheel speed: {msg.data}")
+        self.get_logger().info(f"Right wheel speed being set: {msg.data} radps")
 
         self.set_wheel_speed_signals(
             msg.data,
