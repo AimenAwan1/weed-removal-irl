@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'wombat_drivers'
+package_name = 'wombat_host'
 
 setup(
     name=package_name,
@@ -13,16 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='aimen',
-    maintainer_email='a9awan@uwaterloo.ca',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Samuel Street',
+    maintainer_email='planetaryeclipse@gmail.com',
+    description='Host utilities for running the Wombat robot',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'wheel_velocity_node = wombat_drivers.wheel_velocity_node:main',
-            'open_loop_motor_driver_node = wombat_drivers.open_loop_motor_driver:main',
-            'camera_driver_node = wombat_drivers.camera_driver:main'
+            'xbox_controller_node = wombat_host.xbox_controller:main',
+            'vision_visualizer_node = wombat_host.vision_visualizer:main'
         ],
     },
 )
