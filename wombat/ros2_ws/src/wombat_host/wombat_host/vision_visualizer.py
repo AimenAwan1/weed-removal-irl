@@ -14,7 +14,7 @@ class VisionVisualizer(Node):
     def __init__(self):
         super().__init__("vision_visualizer_node")
         self.create_subscription(
-            Image, CAMERA_RAW_IMAGE_TOPIC, self.camera_raw_image_callback, 10
+            Image, CAMERA_RAW_IMAGE_TOPIC, self.camera_raw_image_callback, 4
         )
 
     def camera_raw_image_callback(self, msg: Image):
