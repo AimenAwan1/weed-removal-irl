@@ -25,7 +25,7 @@ class XboxControllerNode(Node):
         twist = Twist()
 
         twist.linear.x = 0.5 * msg.axes[1]  #left stick vertical
-        twist.angular.z = 0.5 * msg.axes[3] #right stick horizontal
+        twist.angular.z = 1.0 * msg.axes[3] #right stick horizontal
 
         self.cmd_vel_pub.publish(twist)
         self.get_logger().info(f'Published linear velocity: {twist.linear.x}, angular velocity: {twist.angular.z}')
