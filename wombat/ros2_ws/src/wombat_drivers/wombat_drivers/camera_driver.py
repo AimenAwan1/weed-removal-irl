@@ -20,11 +20,12 @@ class CameraDriver(Node):
         self.cap = cv2.VideoCapture(CAMERA_ID)
         self.create_timer(CAMERA_UPDATE_PERIOD_MS / 1000, self.camera_timer_callback)
 
-        self.image_publisher = self.create_publisher(Image, CAMERA_RAW_IMAGE_TOPIC, 10)
+        self.image_publisher = self.create_publisher(Image, CAMERA_RAW_IMAGE_TOPIC, 4)
 
     def camera_timer_callback(self):
         ret, frame = self.cap.read()
         if not ret:
+            self.get_logger().error(f"Failed to read frame!")
             return
         
         self.get_logger().info(f"Frame shape: {frame.shape}")
