@@ -2,3 +2,10 @@
 venv
 
 *.py.swp
+
+# for stm32 cmake projects
+build/
+CMakeFiles
+build.ninja
+compile_commands.json
+CMakeCache.txt
