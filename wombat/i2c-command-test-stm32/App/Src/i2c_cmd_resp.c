@@ -3,17 +3,17 @@
 
 #define SPEED_DATA_LEN (2 * sizeof(float))
 
-float encoder_left_radps = 7.68;
-float encoder_right_radps = 9.87;
+static float encoder_left_radps = 7.68;
+static float encoder_right_radps = 9.87;
 
-float cmd_left_radps = 4.20;
-float cmd_right_radps = 5.29;
+static float cmd_left_radps = 4.20;
+static float cmd_right_radps = 5.29;
 
-uint8_t rxBuffer[SPEED_DATA_LEN];
-uint8_t txBuffer[SPEED_DATA_LEN] = {1, 2, 3, 4, 5, 6, 7, 8};
+static uint8_t rxBuffer[SPEED_DATA_LEN];
+static uint8_t txBuffer[SPEED_DATA_LEN] = {1, 2, 3, 4, 5, 6, 7, 8};
 
-uint32_t txCount = 0;
-uint32_t totalTxCount = 0;
+static uint32_t txCount = 0;
+static uint32_t totalTxCount = 0;
 
 enum
 {
@@ -64,7 +64,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
         if (active_cmd == CMD_SET_SPEEDS)
         {
             // sets up another transaction to receive the commanded speeds
-            HAL_I2C_Slave_Sequential_Receive_IT(hi2c, rxBuffer, 1, I2C_FIRST_FRAME);
+            HAL_I2C_Slave_Sequential_Receive_IT(hi2c, rxBuffer, SPEED_DATA_LEN, I2C_FIRST_FRAME);
         }
     }
     else if (active_cmd == CMD_SET_SPEEDS)
