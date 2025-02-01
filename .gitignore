@@ -1,6 +1,8 @@
 .vscode
 venv
 
+*.csv
+
 *.py.swp
 
 # for stm32 cmake projects

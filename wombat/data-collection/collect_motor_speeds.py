@@ -27,7 +27,7 @@ def main():
     sampling_period = 1 / args.sampling_freq
 
     print(
-        f"Starting sampling: freq={args.sample_freq}, duration={args.sampling_duration}"
+        f"Starting sampling: freq={args.sampling_freq}, duration={args.sampling_duration}"
     )
 
     while True:
@@ -47,7 +47,7 @@ def main():
         time.sleep(sampling_period)
 
     df.to_csv(
-        f"{args.log_file_prefix}_pwm_duty_{args.set_pwm_duty}_sample_freq_{args.sampling_freq}_sample_dur_{args.sampling_duration}"
+        f"{args.log_file_prefix}_pwm_duty_{args.set_pwm_duty}_sample_freq_{args.sampling_freq}_sample_dur_{args.sampling_duration}.csv"
     )
     print("Done!")
 
