@@ -1,3 +1,6 @@
 rpi-lgpio
 adafruit-circuitpython-pca9685
 opencv-python
+adafruit-circuitpython-bno08x
+adafruit-extended-bus
+pynmea2
