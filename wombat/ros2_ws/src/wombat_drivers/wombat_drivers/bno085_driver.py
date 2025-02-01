@@ -8,7 +8,7 @@ import busio
 from adafruit_extended_bus import ExtendedI2C
 from adafruit_bno08x.i2c import BNO08X_I2C
 from adafruit_bno08x import (
-    BNO_REPORT_ACCELEROMETER,
+    BNO_REPORT_LINEAR_ACCELERATION,
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_ROTATION_VECTOR,
 )
@@ -28,7 +28,7 @@ class BNO085Driver(Node):
         i2c = ExtendedI2C(BNO_I2C_BUS)
         self.bno = BNO08X_I2C(i2c)
 
-        self.bno.enable_feature(BNO_REPORT_ACCELEROMETER)
+        self.bno.enable_feature(BNO_REPORT_LINEAR_ACCELERATION)
         self.bno.enable_feature(BNO_REPORT_GYROSCOPE)
         self.bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
 
@@ -70,7 +70,9 @@ class BNO085Driver(Node):
                 raise
 
             self.imu_pub.publish(msg)
-        except:
+        except Exception as e:
+            self.get_logger().error(e)
+
             # sends a blank message to prevent errors
             msg = Imu()
             self.imu_pub.publish(msg)

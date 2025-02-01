@@ -15,10 +15,15 @@ def generate_launch_description():
                 executable="differential_drive_node",
                 name="differential_drive_node",
             ),
+            # Node(
+            #     package="wombat_drivers",
+            #     executable="camera_driver_node",
+            #     name="camera_driver_node",
+            # ),
             Node(
                 package="wombat_drivers",
-                executable="camera_driver_node",
-                name="camera_driver_node",
-            ),
+                executable="bno085_driver_node",
+                name="bno085_driver_node"
+            )
         ]
     )
