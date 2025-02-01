@@ -36,6 +36,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/IMUStamped.msg"
   "srv/YardScan.srv"
   "msg/WheelVelocities.msg"
+  "msg/EstWheelsVel.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 
