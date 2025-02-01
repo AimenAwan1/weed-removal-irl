@@ -24,7 +24,14 @@
 #include "motor_control.h"
 #include "motor_encoder.h"
 #include "PCF8575.h"
+#include "pid_control.h"
 #include "stdio.h"
+
+
+#include <stdarg.h>
+//#include <string.h>
+
+//#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -72,13 +79,13 @@ const static motor_inst motor_R = { .htim_motor = &htim1,
 
 // encoder_inst struct defined in motor_encoder.h
 
-static encoder_inst  motor_L_enc = 	{.first_time = 0,
+encoder_inst  motor_L_enc = 	{.first_time = 0,
 											.htim_encoder = &htim2,
 											.last_counter_value = 0,
 											.position = 0,
 											.timer_period = 0.01,
 											.velocity = 0};
-static encoder_inst  motor_R_enc = 	{.first_time = 0,
+encoder_inst  motor_R_enc = 	{.first_time = 0,
 											.htim_encoder = &htim3,
 											.last_counter_value = 0,
 											.position = 0,
@@ -107,6 +114,26 @@ static PCF8575_inst outputExp_R = {	.hi2c = &hi2c1,
 									.addr = (0b0100010 << 1),
 };
 
+// pid_instance struct is defined in pid_control.h
+static pid_instance mot_L_pid = {.k_d = 0,
+								.error_integral = 0,
+								.k_i = 25,
+								.integral_max = 5000,
+								.last_error = 0,
+								.pwm_output = 0,
+								.k_p = 20,
+								.pid_max = 50,
+								.sam_rate = 100};
+
+static pid_instance mot_R_pid = {.k_d = 0,
+								.error_integral = 0,
+								.k_i = 25,
+								.integral_max = 5000,
+								.last_error = 0,
+								.pwm_output = 0,
+								.k_p = 20,
+								.pid_max = 50,
+								.sam_rate = 100};
 
 float temp_L_velocity = 0;
 float temp_R_velocity = 0;
@@ -128,7 +155,34 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void printf_float(char *buf, size_t buf_len, float val)
+{
+    float abs_val = fabsf(val);
 
+    size_t integ = (size_t)abs_val;
+    size_t frac = (size_t)(abs_val * powf(10, 5));
+
+    if (val > 0)
+        sniprintf(buf, buf_len, "%u.%05u", integ, frac);
+    else
+        sniprintf(buf, buf_len, "-%u.%05u", integ, frac);
+}
+
+void usart_printf(const char *fmt, ...)
+{
+    // osMutexAcquire(USART2_LockHandle, 5); // No timeout
+
+    static char buffer[128];
+    va_list args;
+    va_start(args, fmt);
+    vsniprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    int len = strlen(buffer);
+    HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, -1);
+
+    // osMutexRelease(USART2_LockHandle);
+}
 /* USER CODE END 0 */
 
 /**
@@ -145,6 +199,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -170,9 +225,9 @@ int main(void)
 
   // LED ON-OFF to indicate code starting
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  HAL_Delay(1000);
+  HAL_Delay(500);
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  HAL_Delay(1000);
+  HAL_Delay(500);
 
   // Begin PWM Timer Channels
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -188,12 +243,19 @@ int main(void)
   reset_encoder(&motor_L_enc);
   reset_encoder(&motor_R_enc);
 
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  HAL_Delay(1000);
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  HAL_Delay(1000);
+  // reset pid 
+  reset_pid(&mot_L_pid);
+  reset_pid(&mot_R_pid);
 
+
+  //set_speed_open((motor_inst*)&motor_L, 10);
   HAL_I2C_EnableListen_IT(&hi2c1);
+
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+  HAL_Delay(500);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_Delay(500);
+
  /*
   if(HAL_I2C_IsDeviceReady(outputExp_L.hi2c, outputExp_L.addr, 1, 100) == HAL_OK)
   {
@@ -280,6 +342,18 @@ int main(void)
 		  timer_flag = 0;
 		  get_encoder_speed(&motor_L_enc);
 		  get_encoder_speed(&motor_R_enc);
+      temp_L_velocity = motor_L_enc.velocity;
+      temp_R_velocity = motor_R_enc.velocity;
+      
+      float desired_vel = 1.5; // rad/s
+      apply_pid(&mot_L_pid, desired_vel - temp_L_velocity);
+      set_speed_open((motor_inst*)&motor_L, mot_L_pid.pwm_output);
+      
+      
+      char buf[256];
+      printf_float(buf, sizeof(buf), temp_L_velocity);
+      usart_printf("v = %s rad/s\n", buf);
+      
 		  //writeGPIOExp(&outputExp_L, floatToInt16(motor_L_enc.velocity));
 		  //writeGPIOExp(&outputExp_R, floatToInt16(motor_R_enc.velocity));
 	  }
@@ -368,12 +442,12 @@ static void MX_I2C1_Init(void)
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.OwnAddress1 = 138;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_ENABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
     Error_Handler();
@@ -493,10 +567,10 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 65535;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -545,7 +619,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;

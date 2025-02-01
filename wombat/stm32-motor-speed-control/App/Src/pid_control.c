@@ -33,13 +33,13 @@ pid_typedef apply_pid(pid_instance *pid, float input_error)
 			pid ->k_i * (pid->error_integral) / pid ->sam_rate +
 			pid ->k_d * pid ->sam_rate * (input_error - pid->last_error);
 
-	if(pid->pwm_output >= 100)
+	if(pid->pwm_output >= pid->pid_max)
 	{
-		pid->pwm_output = 100;
+		pid->pwm_output = pid->pid_max;
 	}
-	if(pid->pwm_output <= -100)
+	if(pid->pwm_output <= -pid->pid_max)
 	{
-		pid->pwm_output = -100;
+		pid->pwm_output = -pid->pid_max;
 	}
 	pid->last_error = input_error;
 

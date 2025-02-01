@@ -34,13 +34,13 @@ void disable_motor(motor_inst *motor)
 void set_speed_open(motor_inst *motor, float duty_cycle_percent)
 {
 	// Check and set limits for PWM percent
-	if(duty_cycle_percent > 100.0)
+	if(duty_cycle_percent > 50.0)
 	{
-		duty_cycle_percent = 100.0;
+		duty_cycle_percent = 50.0;
 	}
-	else if(duty_cycle_percent < -100.0)
+	else if(duty_cycle_percent < -50.0)
 	{
-		duty_cycle_percent = -100.0;
+		duty_cycle_percent = -50.0;
 	}
 
 	// Set PWM

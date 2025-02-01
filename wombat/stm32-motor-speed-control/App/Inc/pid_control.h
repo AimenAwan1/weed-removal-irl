@@ -14,6 +14,7 @@ typedef struct
     float pwm_output; /* pwm output % scaled from motor output voltage, -100 to 100 */
     uint16_t sam_rate; /* sampling rate [Hz] */
     float integral_max; /* maximum of the integral term */
+    float pid_max;
 }pid_instance;
 
 typedef enum
