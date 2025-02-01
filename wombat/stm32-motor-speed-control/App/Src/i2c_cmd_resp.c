@@ -1,17 +1,22 @@
 #include "main.h"
 #include "motor_encoder.h"
+#include "kalman_1d.h"
 #include <stdbool.h>
 
-#define SPEED_DATA_LEN (2 * sizeof(float))
+// extern encoder_inst motor_L_enc;
+// extern encoder_inst motor_R_enc;
 
-extern encoder_inst motor_L_enc;
-extern encoder_inst motor_R_enc;
+extern kalman_1d_inst kalm_L;
+extern kalman_1d_inst kalm_R;
 
 extern float des_vel_L;
 extern float des_vel_R;
 
-static uint8_t rxBuffer[SPEED_DATA_LEN];
-static uint8_t txBuffer[SPEED_DATA_LEN];
+#define CMD_SPEED_DATA_LEN (2*sizeof(float))
+#define EST_SPEED_DATA_LEN (4*sizeof(float))
+
+static uint8_t rxBuffer[2*sizeof(float)]; // only commanded speeds
+static uint8_t txBuffer[4*sizeof(float)]; // estimated speeds and variances
 
 static uint32_t txCount = 0;
 static uint32_t totalTxCount = 0;
@@ -46,9 +51,11 @@ extern void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t transferDirect
         {
             // retrieves the most recent encoder data and transmits it
             float *txSpeed = (float *)txBuffer;
-            txSpeed[0] = motor_L_enc.velocity;
-            txSpeed[1] = motor_R_enc.velocity;
-            HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, 8, I2C_LAST_FRAME);
+            txSpeed[0] = kalm_L.xh_k; // estimated speed
+            txSpeed[1] = kalm_L.Ph_k; // variance of estimate
+            txSpeed[2] = kalm_R.xh_k;
+            txSpeed[3] = kalm_R.Ph_k;
+            HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, EST_SPEED_DATA_LEN, I2C_LAST_FRAME);
         }
         else
         {
@@ -66,7 +73,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
         if (active_cmd == CMD_SET_SPEEDS)
         {
             // sets up another transaction to receive the commanded speeds
-            HAL_I2C_Slave_Seq_Receive_IT(hi2c, rxBuffer, SPEED_DATA_LEN, I2C_FIRST_FRAME);
+            HAL_I2C_Slave_Seq_Receive_IT(hi2c, rxBuffer, CMD_SPEED_DATA_LEN, I2C_FIRST_FRAME);
         }
     }
     else if (active_cmd == CMD_SET_SPEEDS)

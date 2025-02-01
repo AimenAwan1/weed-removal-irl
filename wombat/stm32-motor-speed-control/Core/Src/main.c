@@ -137,7 +137,7 @@ static pid_instance mot_R_pid = {.k_d = 0,
 								.sam_rate = 100};
 
 // kalman_1d_inst defined in kalman_1d.h. Must declare every parameter
-static kalman_1d_inst kalm_L = 
+kalman_1d_inst kalm_L = 
 {
                 .A = 1,
                 .Q = 0,
@@ -147,7 +147,7 @@ static kalman_1d_inst kalm_L =
                 .Ph_k = 4,               /* Initial guess of state covariance matrix*/
 };
 
-static kalman_1d_inst kalm_R = 
+kalman_1d_inst kalm_R = 
 {
                 .A = 1,
                 .Q = 0,
@@ -224,7 +224,6 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -370,8 +369,8 @@ int main(void)
       temp_L_velocity = motor_L_enc.velocity;
       temp_R_velocity = motor_R_enc.velocity;
       
-      float desired_vel = 1.5; // rad/s
-      apply_pid(&mot_L_pid, desired_vel - temp_L_velocity);
+      // float desired_vel = 1.5; // rad/s
+      apply_pid(&mot_L_pid, des_vel_L - temp_L_velocity);
       set_speed_open((motor_inst*)&motor_L, mot_L_pid.pwm_output);
       
       
