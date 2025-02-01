@@ -53,6 +53,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     App/Src/motor_encoder.c
     App/Src/PCF8575.c
     App/Src/pid_control.c
+    App/Src/kalman_1d.c
 )
 
 # Add include paths

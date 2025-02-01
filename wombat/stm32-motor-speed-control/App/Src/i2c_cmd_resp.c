@@ -7,8 +7,8 @@
 extern encoder_inst motor_L_enc;
 extern encoder_inst motor_R_enc;
 
-static float cmd_left_radps = 4.20;
-static float cmd_right_radps = 5.29;
+extern float des_vel_L;
+extern float des_vel_R;
 
 static uint8_t rxBuffer[SPEED_DATA_LEN];
 static uint8_t txBuffer[SPEED_DATA_LEN];
@@ -73,8 +73,8 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
     {
         // handles receiving of the commanded speeds
         float *rxSpeed = (float *)rxBuffer;
-        cmd_left_radps = rxSpeed[0];
-        cmd_right_radps = rxSpeed[1];
+        des_vel_L = rxSpeed[0];
+        des_vel_R = rxSpeed[1];
 
         // finished handling the command
         active_cmd = CMD_NONE;

@@ -25,6 +25,7 @@
 #include "motor_encoder.h"
 #include "PCF8575.h"
 #include "pid_control.h"
+#include "kalman_1d.h"
 #include "stdio.h"
 
 
@@ -134,6 +135,30 @@ static pid_instance mot_R_pid = {.k_d = 0,
 								.k_p = 20,
 								.pid_max = 50,
 								.sam_rate = 100};
+
+// kalman_1d_inst defined in kalman_1d.h. Must declare every parameter
+static kalman_1d_inst kalm_L = 
+{
+                .A = 1,
+                .Q = 0,
+                .H = 1,
+                .R = 0.2,
+                .xh_k = 0,               /* Initial guess of state variable */
+                .Ph_k = 4,               /* Initial guess of state covariance matrix*/
+};
+
+static kalman_1d_inst kalm_R = 
+{
+                .A = 1,
+                .Q = 0,
+                .H = 1,
+                .R = 0.2,
+                .xh_k = 0,               /* Initial guess of state variable */
+                .Ph_k = 4,               /* Initial guess of state covariance matrix*/
+};
+
+float des_vel_L = 0;              /* */
+float des_vel_R = 0;
 
 float temp_L_velocity = 0;
 float temp_R_velocity = 0;
@@ -350,10 +375,15 @@ int main(void)
       set_speed_open((motor_inst*)&motor_L, mot_L_pid.pwm_output);
       
       
-      char buf[256];
-      printf_float(buf, sizeof(buf), temp_L_velocity);
-      usart_printf("v = %s rad/s\n", buf);
+      char buf[128];
+      //printf_float(buf  , sizeof(buf), temp_L_velocity);
+      //usart_printf("v = %s rad/s\n", gcvt(temp_L_velocity, 6, buf));
       
+      usart_printf("%s ", gcvt(temp_L_velocity, 6, buf));
+      kalmanUpdate(&kalm_L, temp_L_velocity);
+
+      char buf2[128];
+      usart_printf("%s\n", gcvt(kalm_L.xh_k, 6, buf2));
 		  //writeGPIOExp(&outputExp_L, floatToInt16(motor_L_enc.velocity));
 		  //writeGPIOExp(&outputExp_R, floatToInt16(motor_R_enc.velocity));
 	  }
