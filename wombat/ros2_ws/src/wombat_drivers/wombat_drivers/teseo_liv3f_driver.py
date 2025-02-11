@@ -39,12 +39,12 @@ class TeseoLiv3fDriver(Node):
         msg = self.ser.read(TESEO_READ_LEN)
     
         # finds any potential match based on NMEA terminating bytes
-        partial_msg += msg
-        newline_splits = partial_msg.split(b"\r\n")
+        self.partial_msg += msg
+        newline_splits = self.partial_msg.split(b"\r\n")
 
-        if not partial_msg.endswith(b"\r\n"):
+        if not self.partial_msg.endswith(b"\r\n"):
             # final message from split is guaranteed not a valid message
-            partial_msg = newline_splits[-1]
+            self.partial_msg = newline_splits[-1]
             possible_matches = [
                 (newline_split + b"\r\n")
                 for newline_split in newline_splits[0:-1]
