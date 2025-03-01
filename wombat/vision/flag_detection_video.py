@@ -2,10 +2,10 @@ import numpy as np
 import cv2 as cv
 
 # HSV color values
-#LOWER_MATCH_COLOR = np.array([42//2, 100, 166])
-#UPPER_MATCH_COLOR = np.array([59//2, 255, 255])
-LOWER_MATCH_COLOR = np.array([150,150,150])
-UPPER_MATCH_COLOR = np.array([250, 250, 250])
+LOWER_MATCH_COLOR = np.array([42//2, 100, 166])
+UPPER_MATCH_COLOR = np.array([59//2, 255, 255])
+#LOWER_MATCH_COLOR = np.array([150,150,150])
+#UPPER_MATCH_COLOR = np.array([250, 250, 250])
  
 KNOWN_WIDTH_CM = 5.08   
 FOCAL_LENGTH = 892.2244094488188
@@ -50,14 +50,14 @@ def calculate_distance(focal_length, real_width, width_in_pixels):
     return (real_width * focal_length) / width_in_pixels
 
 def main():
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(2)
     
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        #hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
         #mask = cv.inRange(hsv, LOWER_MATCH_COLOR, UPPER_MATCH_COLOR)
         mask = cv.inRange(frame, LOWER_MATCH_COLOR, UPPER_MATCH_COLOR)
         edges = cv.Canny(mask, 100, 200)

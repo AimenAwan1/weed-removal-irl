@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'differential_drive_node = wombat_nav.differential_drive:main',
+            'waypoint_publisher = wombat_nav.waypoint_publisher:main',
         ],
     },
 )

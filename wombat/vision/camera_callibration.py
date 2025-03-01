@@ -1,14 +1,14 @@
 import cv2 as cv
 import numpy as np
 
-KNOWN_DISTANCE_CM = 24.5
-KNOWN_WIDTH_CM = 5.08      
+KNOWN_DISTANCE_CM = 24.7
+KNOWN_WIDTH_CM = 11    
 
 def calculate_focal_length(measured_width_pixels, known_distance, known_width):
     return (measured_width_pixels * known_distance) / known_width
 
 def main():
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(2)
     
     while True:
         ret, frame = cap.read()
@@ -24,8 +24,13 @@ def main():
     cv.waitKey(0)
 
     #hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    LOWER_MATCH_COLOR = np.array([150,150,150])
-    UPPER_MATCH_COLOR = np.array([250, 250, 250])
+    #LOWER_MATCH_COLOR = np.array([150,150,150])
+    #UPPER_MATCH_COLOR = np.array([250, 250, 250])
+
+    #yellow
+    UPPER_MATCH_COLOR = np.array([153, 255, 255])
+    LOWER_MATCH_COLOR = np.array([30, 128, 170])
+
     mask = cv.inRange(frame, LOWER_MATCH_COLOR, UPPER_MATCH_COLOR)
 
     cv.imshow('Mask', mask)
