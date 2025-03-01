@@ -1,2 +1,3 @@
 np
 opencv-python
+opencv-contrib-python
