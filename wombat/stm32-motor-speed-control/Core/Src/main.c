@@ -65,15 +65,15 @@ UART_HandleTypeDef huart2;
 
 // motor_inst struct defined in motor_control.h
 
-const static motor_inst motor_L = { .htim_motor = &htim1,
-									.htim_motor_f_ch = TIM_CHANNEL_1,
-									.htim_motor_b_ch = TIM_CHANNEL_2,
+static const motor_inst motor_L = { .htim_motor = &htim1,
+									.htim_motor_f_ch = TIM_CHANNEL_3,
+									.htim_motor_b_ch = TIM_CHANNEL_4,
 									.en_pin_number = EN_L_Pin,
 									.en_pin_port = EN_L_GPIO_Port,
 };
-const static motor_inst motor_R = { .htim_motor = &htim1,
-									.htim_motor_f_ch = TIM_CHANNEL_3,
-									.htim_motor_b_ch = TIM_CHANNEL_4,
+static const motor_inst motor_R = { .htim_motor = &htim1,
+									.htim_motor_f_ch = TIM_CHANNEL_1,
+									.htim_motor_b_ch = TIM_CHANNEL_2,
 									.en_pin_number = EN_R_Pin,
 									.en_pin_port = EN_R_GPIO_Port,
 };
@@ -81,13 +81,13 @@ const static motor_inst motor_R = { .htim_motor = &htim1,
 // encoder_inst struct defined in motor_encoder.h
 
 encoder_inst  motor_L_enc = 	{.first_time = 0,
-											.htim_encoder = &htim2,
+											.htim_encoder = &htim3,
 											.last_counter_value = 0,
 											.position = 0,
 											.timer_period = 0.01,
 											.velocity = 0};
 encoder_inst  motor_R_enc = 	{.first_time = 0,
-											.htim_encoder = &htim3,
+											.htim_encoder = &htim2,
 											.last_counter_value = 0,
 											.position = 0,
 											.timer_period = 0.01,
@@ -368,21 +368,40 @@ int main(void)
 		  get_encoder_speed(&motor_R_enc);
       temp_L_velocity = motor_L_enc.velocity;
       temp_R_velocity = motor_R_enc.velocity;
-      
+
+/*
+      set_speed_open((motor_inst*)&motor_L, -10.0);
+      set_speed_open((motor_inst*)&motor_R, -20.0);
+*/
+
+      apply_pid(&mot_L_pid, des_vel_L - temp_L_velocity);
+      set_speed_open((motor_inst*)&motor_L, mot_L_pid.pwm_output);
+
+      apply_pid(&mot_R_pid, des_vel_R - temp_R_velocity);
+      set_speed_open((motor_inst*)&motor_R, mot_R_pid.pwm_output);
+      /*
       // float desired_vel = 1.5; // rad/s
       apply_pid(&mot_L_pid, des_vel_L - temp_L_velocity);
       set_speed_open((motor_inst*)&motor_L, mot_L_pid.pwm_output);
-      
+      */
       
       char buf[128];
       //printf_float(buf  , sizeof(buf), temp_L_velocity);
       //usart_printf("v = %s rad/s\n", gcvt(temp_L_velocity, 6, buf));
       
-      usart_printf("%s ", gcvt(temp_L_velocity, 6, buf));
+      usart_printf("omega_L = %s ", gcvt(temp_L_velocity, 6, buf));
       kalmanUpdate(&kalm_L, temp_L_velocity);
 
       char buf2[128];
-      usart_printf("%s\n", gcvt(kalm_L.xh_k, 6, buf2));
+      usart_printf("%s\t", gcvt(kalm_L.xh_k, 6, buf2));
+      
+      char buf3[128];
+      usart_printf("omega_R = %s ", gcvt(temp_R_velocity, 6, buf3));
+      kalmanUpdate(&kalm_R, temp_R_velocity);
+
+      char buf4[128];
+      usart_printf("%s\n", gcvt(kalm_R.xh_k, 6, buf4));
+
 		  //writeGPIOExp(&outputExp_L, floatToInt16(motor_L_enc.velocity));
 		  //writeGPIOExp(&outputExp_R, floatToInt16(motor_R_enc.velocity));
 	  }
@@ -774,7 +793,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, EN_R_Pin|EN_L_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, EN_L_Pin|EN_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -789,8 +808,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EN_R_Pin EN_L_Pin */
-  GPIO_InitStruct.Pin = EN_R_Pin|EN_L_Pin;
+  /*Configure GPIO pins : EN_L_Pin EN_R_Pin */
+  GPIO_InitStruct.Pin = EN_L_Pin|EN_R_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
