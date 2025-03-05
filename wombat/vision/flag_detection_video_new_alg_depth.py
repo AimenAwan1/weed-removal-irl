@@ -120,9 +120,6 @@ def main():
         edges = cv.Canny(mask, 100, 200)
         contours, _ = cv.findContours(edges, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-        #contours = [cnt for cnt in contours if cv.contourArea(cnt) > 30]
-        #merged_contours = agglomerative_cluster(contours)
-
         rect_img = left
         rects = [cv.boundingRect(cnt) for cnt in contours]
         merged_rects = merge_rectangles(rects)
@@ -136,18 +133,14 @@ def main():
             if w < 30 or h < 30:
                 continue
 
-            # aspect_ratio = h/w
-            # theta = np.arctan(aspect_ratio)
-            # corrected_width = w / np.cos(theta)
-
-            # distance = calculate_distance(FOCAL_LENGTH, KNOWN_WIDTH_CM, corrected_width)
-            # angle = ((x1 + w/2 - frame_center) * (math.pi /3))
-            # detected_objects.append((distance, angle))
-
             cx = (x1 + x2)//2
             cy = (y1 + y2)//2
 
             distance = depth[cy,cx]
+
+            dx = cx - frame_center
+            angle = math.atan2(dx, camera_focal_length)
+            detected_objects.append((distance, angle))
 
             rect_img = cv.rectangle(rect_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv.putText(rect_img, f"{distance:.2f} cm", (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
