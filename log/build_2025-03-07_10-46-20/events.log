@@ -1,0 +1,128 @@
+[0.000000] (-) TimerEvent: {}
+[0.000179] (i2c-command-test-stm32) JobQueued: {'identifier': 'i2c-command-test-stm32', 'dependencies': OrderedDict()}
+[0.000220] (stm32-motor-speed-control) JobQueued: {'identifier': 'stm32-motor-speed-control', 'dependencies': OrderedDict()}
+[0.000248] (wombat_host) JobQueued: {'identifier': 'wombat_host', 'dependencies': OrderedDict()}
+[0.000272] (wombat_launch) JobQueued: {'identifier': 'wombat_launch', 'dependencies': OrderedDict()}
+[0.000294] (wombat_msgs) JobQueued: {'identifier': 'wombat_msgs', 'dependencies': OrderedDict()}
+[0.000320] (wombat_drivers) JobQueued: {'identifier': 'wombat_drivers', 'dependencies': OrderedDict([('wombat_msgs', '/home/aimen/weed-removal-irl/install/wombat_msgs')])}
+[0.000346] (wombat_meercat_if) JobQueued: {'identifier': 'wombat_meercat_if', 'dependencies': OrderedDict([('wombat_msgs', '/home/aimen/weed-removal-irl/install/wombat_msgs')])}
+[0.000370] (wombat_nav) JobQueued: {'identifier': 'wombat_nav', 'dependencies': OrderedDict([('wombat_msgs', '/home/aimen/weed-removal-irl/install/wombat_msgs')])}
+[0.000395] (wombat_msgs) JobStarted: {'identifier': 'wombat_msgs'}
+[0.003383] (i2c-command-test-stm32) JobStarted: {'identifier': 'i2c-command-test-stm32'}
+[0.004592] (stm32-motor-speed-control) JobStarted: {'identifier': 'stm32-motor-speed-control'}
+[0.006052] (wombat_host) JobStarted: {'identifier': 'wombat_host'}
+[0.008940] (wombat_launch) JobStarted: {'identifier': 'wombat_launch'}
+[0.011930] (wombat_msgs) JobProgress: {'identifier': 'wombat_msgs', 'progress': 'cmake'}
+[0.012357] (wombat_msgs) Command: {'cmd': ['/usr/bin/cmake', '/home/aimen/weed-removal-irl/wombat/ros2_ws/src/wombat_msgs', '-DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/wombat_msgs'], 'cwd': '/home/aimen/weed-removal-irl/build/wombat_msgs', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'aimen'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('HOME', '/home/aimen'), ('OLDPWD', '/home/aimen'), ('DESKTOP_SESSION', 'ubuntu-xorg'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2160'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'aimen'), ('_', '/usr/bin/colcon'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'aimen'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('WINDOWPATH', '2'), ('PATH', '/home/aimen/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:@/tmp/.ICE-unix/2131,unix/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:/tmp/.ICE-unix/2131'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/a499eb12_73ad_4e53_8ce1_1f3fe57b5d6b'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'en_CA.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu-xorg'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.134'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu-xorg'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/aimen/weed-removal-irl/build/wombat_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu-xorg:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu-xorg:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('COLCON', '1'), ('VTE_VERSION', '6800')]), 'shell': False}
+[0.015075] (i2c-command-test-stm32) JobProgress: {'identifier': 'i2c-command-test-stm32', 'progress': 'cmake'}
+[0.015488] (i2c-command-test-stm32) Command: {'cmd': ['/usr/bin/cmake', '/home/aimen/weed-removal-irl/wombat/i2c-command-test-stm32', '-DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/i2c-command-test-stm32'], 'cwd': '/home/aimen/weed-removal-irl/build/i2c-command-test-stm32', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'aimen'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('HOME', '/home/aimen'), ('OLDPWD', '/home/aimen'), ('DESKTOP_SESSION', 'ubuntu-xorg'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2160'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'aimen'), ('_', '/usr/bin/colcon'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'aimen'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('WINDOWPATH', '2'), ('PATH', '/home/aimen/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:@/tmp/.ICE-unix/2131,unix/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:/tmp/.ICE-unix/2131'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/a499eb12_73ad_4e53_8ce1_1f3fe57b5d6b'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'en_CA.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu-xorg'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.134'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu-xorg'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/aimen/weed-removal-irl/build/i2c-command-test-stm32'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu-xorg:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu-xorg:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('COLCON', '1'), ('VTE_VERSION', '6800')]), 'shell': False}
+[0.016627] (stm32-motor-speed-control) JobProgress: {'identifier': 'stm32-motor-speed-control', 'progress': 'cmake'}
+[0.016808] (stm32-motor-speed-control) Command: {'cmd': ['/usr/bin/cmake', '/home/aimen/weed-removal-irl/wombat/stm32-motor-speed-control', '-DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/stm32-motor-speed-control'], 'cwd': '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'aimen'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('HOME', '/home/aimen'), ('OLDPWD', '/home/aimen'), ('DESKTOP_SESSION', 'ubuntu-xorg'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '2160'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('GTK_IM_MODULE', 'ibus'), ('LOGNAME', 'aimen'), ('_', '/usr/bin/colcon'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'aimen'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('WINDOWPATH', '2'), ('PATH', '/home/aimen/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:@/tmp/.ICE-unix/2131,unix/aimen-Vivobook-ASUSLaptop-K6602VV-K6602VV:/tmp/.ICE-unix/2131'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/a499eb12_73ad_4e53_8ce1_1f3fe57b5d6b'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('LANG', 'en_CA.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu-xorg'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.134'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu-xorg'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu-xorg:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu-xorg:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('COLCON', '1'), ('VTE_VERSION', '6800')]), 'shell': False}
+[0.099475] (-) TimerEvent: {}
+[0.199807] (-) TimerEvent: {}
+[0.229501] (wombat_msgs) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.230120] (i2c-command-test-stm32) StdoutLine: {'line': b'-- The C compiler identification is unknown\n'}
+[0.231724] (i2c-command-test-stm32) StdoutLine: {'line': b'-- The ASM compiler identification is unknown\n'}
+[0.231829] (i2c-command-test-stm32) StdoutLine: {'line': b'-- Found assembler: arm-none-eabi-gcc\n'}
+[0.231901] (i2c-command-test-stm32) StdoutLine: {'line': b'-- Warning: Did not find file Compiler/-ASM\n'}
+[0.231962] (i2c-command-test-stm32) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.232022] (i2c-command-test-stm32) StdoutLine: {'line': b'See also "/home/aimen/weed-removal-irl/build/i2c-command-test-stm32/CMakeFiles/CMakeOutput.log".\n'}
+[0.232081] (i2c-command-test-stm32) StdoutLine: {'line': b'See also "/home/aimen/weed-removal-irl/build/i2c-command-test-stm32/CMakeFiles/CMakeError.log".\n'}
+[0.232314] (i2c-command-test-stm32) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:31 (enable_language):\n'}
+[0.232954] (i2c-command-test-stm32) StderrLine: {'line': b'  The CMAKE_C_COMPILER:\n'}
+[0.233413] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.233514] (i2c-command-test-stm32) StderrLine: {'line': b'    arm-none-eabi-gcc\n'}
+[0.235286] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.235410] (i2c-command-test-stm32) StderrLine: {'line': b'  is not a full path and was not found in the PATH.\n'}
+[0.235494] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.235590] (i2c-command-test-stm32) StderrLine: {'line': b'  Tell CMake where to find the compiler by setting either the environment\n'}
+[0.235690] (i2c-command-test-stm32) StderrLine: {'line': b'  variable "CC" or the CMake cache entry CMAKE_C_COMPILER to the full path to\n'}
+[0.235791] (i2c-command-test-stm32) StderrLine: {'line': b'  the compiler, or to the compiler name if it is in the PATH.\n'}
+[0.235886] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.235965] (i2c-command-test-stm32) StderrLine: {'line': b'\x1b[0m\n'}
+[0.236038] (i2c-command-test-stm32) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:31 (enable_language):\n'}
+[0.236112] (i2c-command-test-stm32) StderrLine: {'line': b'  The CMAKE_ASM_COMPILER:\n'}
+[0.236185] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.236258] (i2c-command-test-stm32) StderrLine: {'line': b'    arm-none-eabi-gcc\n'}
+[0.236331] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.236405] (i2c-command-test-stm32) StderrLine: {'line': b'  is not a full path and was not found in the PATH.\n'}
+[0.236478] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.236568] (i2c-command-test-stm32) StderrLine: {'line': b'  Tell CMake where to find the compiler by setting either the environment\n'}
+[0.236658] (i2c-command-test-stm32) StderrLine: {'line': b'  variable "ASM" or the CMake cache entry CMAKE_ASM_COMPILER to the full path\n'}
+[0.236752] (i2c-command-test-stm32) StderrLine: {'line': b'  to the compiler, or to the compiler name if it is in the PATH.\n'}
+[0.236845] (i2c-command-test-stm32) StderrLine: {'line': b'\n'}
+[0.236926] (i2c-command-test-stm32) StderrLine: {'line': b'\x1b[0m\n'}
+[0.237009] (stm32-motor-speed-control) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:31 (enable_language):\n'}
+[0.237106] (stm32-motor-speed-control) StderrLine: {'line': b'  The CMAKE_C_COMPILER:\n'}
+[0.237180] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.237253] (stm32-motor-speed-control) StderrLine: {'line': b'    arm-none-eabi-gcc\n'}
+[0.237326] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.237399] (stm32-motor-speed-control) StderrLine: {'line': b'  is not a full path and was not found in the PATH.\n'}
+[0.237472] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.237554] (stm32-motor-speed-control) StderrLine: {'line': b'  Tell CMake where to find the compiler by setting either the environment\n'}
+[0.237639] (stm32-motor-speed-control) StderrLine: {'line': b'  variable "CC" or the CMake cache entry CMAKE_C_COMPILER to the full path to\n'}
+[0.237736] (stm32-motor-speed-control) StderrLine: {'line': b'  the compiler, or to the compiler name if it is in the PATH.\n'}
+[0.237828] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.237911] (stm32-motor-speed-control) StderrLine: {'line': b'\x1b[0m\n'}
+[0.237983] (stm32-motor-speed-control) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:31 (enable_language):\n'}
+[0.238055] (stm32-motor-speed-control) StderrLine: {'line': b'  The CMAKE_ASM_COMPILER:\n'}
+[0.238127] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.238199] (stm32-motor-speed-control) StderrLine: {'line': b'    arm-none-eabi-gcc\n'}
+[0.238271] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.238343] (stm32-motor-speed-control) StderrLine: {'line': b'  is not a full path and was not found in the PATH.\n'}
+[0.238416] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.238487] (stm32-motor-speed-control) StderrLine: {'line': b'  Tell CMake where to find the compiler by setting either the environment\n'}
+[0.238570] (stm32-motor-speed-control) StderrLine: {'line': b'  variable "ASM" or the CMake cache entry CMAKE_ASM_COMPILER to the full path\n'}
+[0.238850] (stm32-motor-speed-control) StderrLine: {'line': b'  to the compiler, or to the compiler name if it is in the PATH.\n'}
+[0.238955] (stm32-motor-speed-control) StderrLine: {'line': b'\n'}
+[0.239036] (stm32-motor-speed-control) StderrLine: {'line': b'\x1b[0m\n'}
+[0.239112] (stm32-motor-speed-control) StdoutLine: {'line': b'-- The C compiler identification is unknown\n'}
+[0.239208] (stm32-motor-speed-control) StdoutLine: {'line': b'-- The ASM compiler identification is unknown\n'}
+[0.239289] (stm32-motor-speed-control) StdoutLine: {'line': b'-- Found assembler: arm-none-eabi-gcc\n'}
+[0.239366] (stm32-motor-speed-control) StdoutLine: {'line': b'-- Warning: Did not find file Compiler/-ASM\n'}
+[0.239441] (stm32-motor-speed-control) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.239524] (stm32-motor-speed-control) StdoutLine: {'line': b'See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeOutput.log".\n'}
+[0.239611] (stm32-motor-speed-control) StdoutLine: {'line': b'See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeError.log".\n'}
+[0.239706] (wombat_msgs) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.246323] (wombat_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.299901] (-) TimerEvent: {}
+[0.308919] (wombat_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.316006] (wombat_msgs) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.316456] (wombat_msgs) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.317209] (wombat_msgs) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.320069] (wombat_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.384129] (wombat_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.390714] (wombat_msgs) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.390936] (wombat_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.391215] (wombat_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.397763] (wombat_msgs) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.397902] (wombat_msgs) StdoutLine: {'line': b'See also "/home/aimen/weed-removal-irl/build/wombat_msgs/CMakeFiles/CMakeOutput.log".\n'}
+[0.398182] (wombat_msgs) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:12 (find_package):\n'}
+[0.398313] (wombat_msgs) StderrLine: {'line': b'  By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project\n'}
+[0.398397] (wombat_msgs) StderrLine: {'line': b'  has asked CMake to find a package configuration file provided by\n'}
+[0.398474] (wombat_msgs) StderrLine: {'line': b'  "ament_cmake", but CMake did not find one.\n'}
+[0.398557] (wombat_msgs) StderrLine: {'line': b'\n'}
+[0.398637] (wombat_msgs) StderrLine: {'line': b'  Could not find a package configuration file provided by "ament_cmake" with\n'}
+[0.398710] (wombat_msgs) StderrLine: {'line': b'  any of the following names:\n'}
+[0.398788] (wombat_msgs) StderrLine: {'line': b'\n'}
+[0.398858] (wombat_msgs) StderrLine: {'line': b'    ament_cmakeConfig.cmake\n'}
+[0.398957] (wombat_msgs) StderrLine: {'line': b'    ament_cmake-config.cmake\n'}
+[0.399047] (wombat_msgs) StderrLine: {'line': b'\n'}
+[0.399080] (wombat_msgs) StderrLine: {'line': b'  Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set\n'}
+[0.399109] (wombat_msgs) StderrLine: {'line': b'  "ament_cmake_DIR" to a directory containing one of the above files.  If\n'}
+[0.399135] (wombat_msgs) StderrLine: {'line': b'  "ament_cmake" provides a separate development package or SDK, be sure it\n'}
+[0.399162] (wombat_msgs) StderrLine: {'line': b'  has been installed.\n'}
+[0.399190] (wombat_msgs) StderrLine: {'line': b'\n'}
+[0.399217] (wombat_msgs) StderrLine: {'line': b'\x1b[0m\n'}
+[0.399990] (-) TimerEvent: {}
+[0.409772] (stm32-motor-speed-control) CommandEnded: {'returncode': 1}
+[0.409982] (stm32-motor-speed-control) JobEnded: {'identifier': 'stm32-motor-speed-control', 'rc': 1}
+[0.410602] (i2c-command-test-stm32) CommandEnded: {'returncode': 1}
+[0.411035] (i2c-command-test-stm32) JobEnded: {'identifier': 'i2c-command-test-stm32', 'rc': 1}
+[0.411757] (wombat_launch) JobEnded: {'identifier': 'wombat_launch', 'rc': 'SIGINT'}
+[0.412261] (wombat_msgs) JobEnded: {'identifier': 'wombat_msgs', 'rc': 'SIGINT'}
+[0.412805] (wombat_host) JobEnded: {'identifier': 'wombat_host', 'rc': 'SIGINT'}
+[0.423309] (wombat_drivers) JobSkipped: {'identifier': 'wombat_drivers'}
+[0.423332] (wombat_meercat_if) JobSkipped: {'identifier': 'wombat_meercat_if'}
+[0.423344] (wombat_nav) JobSkipped: {'identifier': 'wombat_nav'}
+[0.423356] (-) EventReactorShutdown: {}

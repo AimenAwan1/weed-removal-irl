@@ -1,0 +1,7 @@
+-- The C compiler identification is unknown
+-- The ASM compiler identification is unknown
+-- Found assembler: arm-none-eabi-gcc
+-- Warning: Did not find file Compiler/-ASM
+-- Configuring incomplete, errors occurred!
+See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeOutput.log".
+See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeError.log".

@@ -1,0 +1,33 @@
+[0.012s] Invoking command in '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control': /usr/bin/cmake /home/aimen/weed-removal-irl/wombat/stm32-motor-speed-control -DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/stm32-motor-speed-control
+[0.232s] [31mCMake Error at CMakeLists.txt:31 (enable_language):
+[0.232s]   The CMAKE_C_COMPILER:
+[0.232s] 
+[0.232s]     arm-none-eabi-gcc
+[0.232s] 
+[0.233s]   is not a full path and was not found in the PATH.
+[0.233s] 
+[0.233s]   Tell CMake where to find the compiler by setting either the environment
+[0.233s]   variable "CC" or the CMake cache entry CMAKE_C_COMPILER to the full path to
+[0.233s]   the compiler, or to the compiler name if it is in the PATH.
+[0.233s] 
+[0.233s] [0m
+[0.233s] [31mCMake Error at CMakeLists.txt:31 (enable_language):
+[0.233s]   The CMAKE_ASM_COMPILER:
+[0.233s] 
+[0.233s]     arm-none-eabi-gcc
+[0.233s] 
+[0.233s]   is not a full path and was not found in the PATH.
+[0.234s] 
+[0.234s]   Tell CMake where to find the compiler by setting either the environment
+[0.234s]   variable "ASM" or the CMake cache entry CMAKE_ASM_COMPILER to the full path
+[0.234s]   to the compiler, or to the compiler name if it is in the PATH.
+[0.234s] 
+[0.234s] [0m
+[0.234s] -- The C compiler identification is unknown
+[0.234s] -- The ASM compiler identification is unknown
+[0.234s] -- Found assembler: arm-none-eabi-gcc
+[0.234s] -- Warning: Did not find file Compiler/-ASM
+[0.235s] -- Configuring incomplete, errors occurred!
+[0.235s] See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeOutput.log".
+[0.235s] See also "/home/aimen/weed-removal-irl/build/stm32-motor-speed-control/CMakeFiles/CMakeError.log".
+[0.405s] Invoked command in '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control' returned '1': /usr/bin/cmake /home/aimen/weed-removal-irl/wombat/stm32-motor-speed-control -DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/stm32-motor-speed-control

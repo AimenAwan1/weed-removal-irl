@@ -1,0 +1,2 @@
+Invoking command in '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control': /usr/bin/cmake /home/aimen/weed-removal-irl/wombat/stm32-motor-speed-control -DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/stm32-motor-speed-control
+Invoked command in '/home/aimen/weed-removal-irl/build/stm32-motor-speed-control' returned '1': /usr/bin/cmake /home/aimen/weed-removal-irl/wombat/stm32-motor-speed-control -DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/stm32-motor-speed-control

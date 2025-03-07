@@ -30,8 +30,8 @@ class InverseKinematicsController(Node):
         properties_file = os.path.join(description_pkg,'config','properties.yaml')
         with open(properties_file,'r') as file:
             properties = yaml.load(file,Loader=yaml.SafeLoader)
-        self.wheel_separation = float(properties['wheel_separation'])
-        self.wheel_radius = float(properties['wheel_radius'])
+        self.wheel_separation = 0.5348 #float(properties['wheel_separation'])
+        self.wheel_radius = 0.254 #float(properties['wheel_radius'])
         self.get_logger().info(f'{self.get_name()} has started.')
 
         self.target_position = None
@@ -40,9 +40,9 @@ class InverseKinematicsController(Node):
         self.kp_linear = 0.5
         self.ki_linear = 0.005
         self.kd_linear = 0.001
-        self.kp_angular = 1.0
-        self.ki_angular = 0.01
-        self.kd_angular = 0.01
+        self.kp_angular = 5.0 #1.0
+        self.ki_angular = 1.1234 #0.01
+        self.kd_angular = 0.1 #0.01
 
         self.prev_error_linear = 0.0
         self.integral_linear = 0.0

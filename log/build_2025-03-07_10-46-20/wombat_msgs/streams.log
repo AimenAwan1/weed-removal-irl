@@ -1,0 +1,32 @@
+[0.012s] Invoking command in '/home/aimen/weed-removal-irl/build/wombat_msgs': /usr/bin/cmake /home/aimen/weed-removal-irl/wombat/ros2_ws/src/wombat_msgs -DCMAKE_INSTALL_PREFIX=/home/aimen/weed-removal-irl/install/wombat_msgs
+[0.229s] -- The C compiler identification is GNU 11.4.0
+[0.239s] -- The CXX compiler identification is GNU 11.4.0
+[0.246s] -- Detecting C compiler ABI info
+[0.309s] -- Detecting C compiler ABI info - done
+[0.316s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.316s] -- Detecting C compile features
+[0.317s] -- Detecting C compile features - done
+[0.320s] -- Detecting CXX compiler ABI info
+[0.384s] -- Detecting CXX compiler ABI info - done
+[0.390s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.391s] -- Detecting CXX compile features
+[0.391s] -- Detecting CXX compile features - done
+[0.397s] -- Configuring incomplete, errors occurred!
+[0.398s] See also "/home/aimen/weed-removal-irl/build/wombat_msgs/CMakeFiles/CMakeOutput.log".
+[0.398s] [31mCMake Error at CMakeLists.txt:12 (find_package):
+[0.398s]   By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project
+[0.398s]   has asked CMake to find a package configuration file provided by
+[0.398s]   "ament_cmake", but CMake did not find one.
+[0.398s] 
+[0.398s]   Could not find a package configuration file provided by "ament_cmake" with
+[0.398s]   any of the following names:
+[0.398s] 
+[0.399s]     ament_cmakeConfig.cmake
+[0.399s]     ament_cmake-config.cmake
+[0.399s] 
+[0.399s]   Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set
+[0.399s]   "ament_cmake_DIR" to a directory containing one of the above files.  If
+[0.399s]   "ament_cmake" provides a separate development package or SDK, be sure it
+[0.399s]   has been installed.
+[0.399s] 
+[0.399s] [0m
