@@ -23,6 +23,7 @@ setup(
             'wheel_velocity_node = wombat_drivers.wheel_velocity_node:main',
             'open_loop_motor_driver_node = wombat_drivers.open_loop_motor_driver:main',
             'camera_driver_node = wombat_drivers.camera_driver:main',
+            'stereo_camera_driver_node = wombat_drivers.stereo_camera_driver:main',
             'bno085_driver_node = wombat_drivers.bno085_driver:main',
             'stm32_motor_driver_node = wombat_drivers.stm32_motor_driver:main',
             'teseo_liv3f_driver_node = wombat_drivers.teseo_liv3f_driver:main'
