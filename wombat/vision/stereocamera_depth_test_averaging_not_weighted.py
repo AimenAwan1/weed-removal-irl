@@ -37,7 +37,7 @@ max_disp = 96
 sigma = 1.5
 lmbda = 8000.0
 
-num_prev_disparities = 2
+num_prev_disparities = 1
 prev_disparities = np.zeros((num_prev_disparities,FRAME_HEIGHT,FRAME_WIDTH))
 
 def main():

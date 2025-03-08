@@ -37,12 +37,28 @@ max_disp = 96
 sigma = 1.5
 lmbda = 8000.0
 
-num_prev_disparities = 2
+num_prev_disparities = 3
 prev_disparities = np.zeros((num_prev_disparities,FRAME_HEIGHT,FRAME_WIDTH))
+
+def weighting_avg(values):
+    # assume is 3-dim tensor (first is num of images)
+    n = values.shape[0]
+
+    equal_avg = np.sum(values,axis=0)/n
+    
+    # computes weights based on distance of every pixel from the equal OWA avg.
+    # i.e. the further away from the average the less important it is
+    dists = np.abs(equal_avg - values)
+    weights = dists / (np.sum(dists,axis=0)+1)
+
+    # computes the new weighted average
+    return np.sum(values * weights, axis=0)
+
+
 
 def main():
     cap = cv.VideoCapture('/dev/video2')
-    cap.set(cv.CAP_PROP_FPS, 20)
+    cap.set(cv.CAP_PROP_FPS, 30)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, CAPTURE_RESOLUTION_X)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, CAPTURE_RESOLUTION_Y)
 
@@ -89,28 +105,44 @@ def main():
         left_disp = left_matcher.compute(left_dst_grayscale,right_dst_grayscale)
         right_disp = right_matcher.compute(right_dst_grayscale,left_dst_grayscale)
 
+        print(left_dst_grayscale.shape)
+
         wls_filter = cv.ximgproc.createDisparityWLSFilter(left_matcher)
         wls_filter.setLambda(lmbda)
         wls_filter.setSigmaColor(sigma);
         filtered_disp = wls_filter.filter(left_disp,left_dst_grayscale,disparity_map_right=right_disp)
 
+        # change this to change what is being fed into the filter
         disparity = filtered_disp
 
         for i in range(num_prev_disparities-1):
             prev_disparities[i,:,:] = prev_disparities[i+1,:,:]
         prev_disparities[num_prev_disparities-1,:,:] = disparity
 
-        avg_disparity = np.sum(prev_disparities,axis=0)/num_prev_disparities
+        # NOTE: min of 1 needed to prevent potential divide by zero errors
+        # avg_disparity = weighting_avg(prev_disparities)
+        avg_disparity = np.sum(prev_disparities,axis=0) / prev_disparities.shape[0]
+        print(f'avg disparity shape: {avg_disparity.shape}')
+        clipped_avg_disparity = np.clip(avg_disparity, a_min=1, a_max=None)
 
         # disparity = stereo.compute(left_dst_grayscale, right_dst_grayscale)
-        
-        depth = np.clip(left_cmtx[1,1]*baseline / avg_disparity, a_min=0, a_max=200)
+        depth = np.clip(left_cmtx[1,1]*baseline / clipped_avg_disparity, a_min=0, a_max=200)
 
-        # filter the disparity map
+        # display the visual map
+        im_shape = left_dst_grayscale.shape
+        max_vis_disparity = 2000
+        visual_map = (np.clip(clipped_avg_disparity, a_min=0, a_max=max_vis_disparity)/max_vis_disparity)
+        # print(visual_map.shape)
 
-        plt.imshow(depth,'gray')
-        plt.colorbar()
-        plt.show(block=True)
+        # print(visual_map)
+
+        # print(avg_disparity)
+
+        # plt.imshow(avg_disparity,'gray')
+        # plt.colorbar()
+        # plt.show(block=True)
+
+        cv.imshow("visual",visual_map)
         
         # cv.imshow("Right", frame_right)
 
