@@ -74,12 +74,12 @@ RIGHT_TRANSLATE = np.asarray([
 
 # disparity calculations
 DISPARITY_WSIZE = 21
-DISPARITY_NUM_MAX = 64
+DISPARITY_NUM_MAX = 96
 BASELINE = 5.976137772117957
 
 # disparity filtering
-WLS_SIGMA = 1.5
-WLS_LAMBDA = 80000.0
+WLS_SIGMA = 1.1
+WLS_LAMBDA = 8000.0
 NUM_PREV_CAPTURES = 2
 
 # point cloud transmission characteristics (m)
@@ -111,7 +111,8 @@ class StereoCameraDriver(Node):
         self.left_transform = np.concatenate((LEFT_ROT, LEFT_TRANSLATE), axis=1)
         self.right_transform = np.concatenate((RIGHT_ROT, RIGHT_TRANSLATE), axis=1)
 
-        self.prev_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
+        self.prev_left_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
+        self.prev_right_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
 
         # publishers
         self.left_camera_info_publisher = self.create_publisher(CameraInfo, LEFT_CAMERA_INFO_TOPIC, 10)
@@ -189,37 +190,90 @@ class StereoCameraDriver(Node):
         self.get_logger().info("Processed camera frame...")
 
         # convert to grayscale
-        left_grayscale = cv.cvtColor(left, cv.COLOR_BGR2GRAY)
-        right_grayscale = cv.cvtColor(right, cv.COLOR_BGR2GRAY)
+        left_grayscale = cv.cvtColor(left_undistorted, cv.COLOR_BGR2GRAY)
+        right_grayscale = cv.cvtColor(right_undistorted, cv.COLOR_BGR2GRAY)
 
         # # compute disparity map
-        left_matcher = cv.StereoBM.create(DISPARITY_NUM_MAX, DISPARITY_WSIZE)
+
+        channels = 1
+        min_disparity = 11
+        num_disparities = 32
+        block_size = 3
+        p1 = 8*channels*block_size*block_size
+        p2 = 32*channels*block_size*block_size
+        disp_12_max_diff = 5
+        pre_filter_cap = 5
+        uniqueness_ratio = 10
+        speckle_window_size = 50
+        speckle_range = 5
+        mode = 0  # normal sgbm mode for now
+
+
+        left_matcher = cv.StereoSGBM.create(min_disparity, num_disparities, block_size, p1, p2, disp_12_max_diff, pre_filter_cap, uniqueness_ratio, speckle_window_size, speckle_range, mode)
         right_matcher = cv.ximgproc.createRightMatcher(left_matcher)
 
         left_disparity = left_matcher.compute(left_grayscale, right_grayscale)
         right_disparity = right_matcher.compute(right_grayscale, left_grayscale)
 
-        # # low pass filter the disparities
-        kernel = np.ones((3,3))/9
-        left_disparity_low_pass = cv.filter2D(left_disparity,-1,kernel)
-        right_disparity_low_pass = cv.filter2D(right_disparity,-1,kernel)
+        cv.imshow("left", left)
+        cv.imshow("left grayscale", left_grayscale)
 
-        # # filter/upscale disparity map using the camera image
-        wls_filter = cv.ximgproc.createDisparityWLSFilter(left_matcher)
-        wls_filter.setLambda(WLS_LAMBDA)
-        wls_filter.setSigmaColor(WLS_SIGMA)
-        filtered_left_disparity = wls_filter.filter(left_disparity_low_pass, left_grayscale, disparity_map_right=right_disparity_low_pass)
+        disp_left_disparity = left_disparity / np.max(left_disparity)
+        cv.imshow("left disparity", disp_left_disparity)
+
+        # # low pass filter the disparities
+        # kernel = np.ones((3,3))/9
+        # left_disparity_low_pass = cv.filter2D(left_disparity,-1,kernel)
+        # right_disparity_low_pass = cv.filter2D(right_disparity,-1,kernel)
 
         # include the frame in the moving average
         for i in range(NUM_PREV_CAPTURES-1):
-            self.prev_disparities[i,:,:] = self.prev_disparities[i+1,:,:]
-        self.prev_disparities[NUM_PREV_CAPTURES-1,:,:] = filtered_left_disparity
+            self.prev_left_disparities[i,:,:] = self.prev_left_disparities[i+1,:,:]
+            self.prev_right_disparities[i,:,:] = self.prev_right_disparities[i+1,:,:]
+        self.prev_left_disparities[NUM_PREV_CAPTURES-1,:,:] = left_disparity
+        self.prev_right_disparities[NUM_PREV_CAPTURES-1,:,:] = right_disparity
 
-        avg_disparity = np.sum(self.prev_disparities,axis=0)/self.prev_disparities.shape[0]
+        avg_left_disparity = self.prev_left_disparities.sum(axis=0) / self.prev_left_disparities.shape[0]
+        avg_right_disparity = self.prev_right_disparities.sum(axis=0) / self.prev_right_disparities.shape[0]
+
+        preconversion = np.float32(avg_left_disparity / np.max(np.clip(avg_left_disparity, a_min=1, a_max=None)))
+        disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
+        disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
+
+        print(disparity_grayscale_img_int)
+        cv.imshow("avg left disparity", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
+
+        # filter/upscale disparity map using the camera image
+        wls_filter = cv.ximgproc.createDisparityWLSFilter(left_matcher)
+
+        lmbda = 20000 # regularization during filtering -> larger forces filtered disparity to adhere to source edges
+        sigma_color = 2.0  # sensitivity to source image edges -> low value better adherence to source edges
+        depth_discontinuity_radius = 2 # defines size of low confidence regions around discontinuities
+        lrc_thresh = 24  # this value basically always good (threshold disparity diff in left consistency check)
+
+        wls_filter.setLambda(lmbda)
+        wls_filter.setSigmaColor(sigma_color)
+        wls_filter.setDepthDiscontinuityRadius(depth_discontinuity_radius)
+        wls_filter.setLRCthresh(lrc_thresh)
+        filtered_left_disparity = wls_filter.filter(avg_left_disparity, left_grayscale, disparity_map_right=avg_right_disparity)
+
+        preconversion = np.float32(filtered_left_disparity / np.max(np.clip(filtered_left_disparity, a_min=1, a_max=None)))
+        disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
+        disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
+
+        print(disparity_grayscale_img_int)
+        cv.imshow("filtered disparity", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
+
+        # cv.imshow("filtered", np.clip(filtered_left_disparity, 0, 1600))
+
+        # depth = LEFT_CMTX[0,0]*BASELINE / np.clip(filtered_left_disparity, a_min=1,a_max=None)
+        # cv.imshow("depth", 1-depth)
+
         
-        # error occurs in depth computation if the disparity is 0
-        clipped_avg_disparity = np.clip(avg_disparity, a_min=1, a_max=None)
-        avg_depth = LEFT_CMTX[0,0]*BASELINE / clipped_avg_disparity
+
+        # # error occurs in depth computation if the disparity is 0
+        # clipped_avg_disparity = np.clip(avg_disparity, a_min=1, a_max=None)
+        # avg_depth = LEFT_CMTX[0,0]*BASELINE / clipped_avg_disparity
 
         # # NOTE: the following uses homogenous coordinates in SE(3)
 
@@ -263,11 +317,11 @@ class StereoCameraDriver(Node):
         # self.get_logger().info("Published new cloud from depth camera!")
 
         # display (temporary)
-        max_visual_depth = 1000 # 10 m
-        visual_map = np.clip(avg_depth, a_min=0, a_max=max_visual_depth)/max_visual_depth
-        visual_map = 1 - visual_map # recolor so light is closer
-        cv.imshow("visual", visual_map)
-        cv.imshow("raw", left)
+        # max_visual_depth = 1000 # 10 m
+        # visual_map = np.clip(avg_depth, a_min=0, a_max=max_visual_depth)/max_visual_depth
+        # visual_map = 1 - visual_map # recolor so light is closer
+        # cv.imshow("visual", visual_map)
+        # cv.imshow("raw", left)
         # cv.imshow("original", left_disparity/np.max(left_disparity))
         # cv.imshow("filtered", left_disparity_low_pass/np.max(left_disparity_low_pass))
         # cv.imshow("left_filt", filtered_left_disparity)
