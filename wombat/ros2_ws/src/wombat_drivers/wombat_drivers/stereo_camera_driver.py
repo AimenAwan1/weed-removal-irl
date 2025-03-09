@@ -4,6 +4,7 @@ from rclpy.node import Node
 
 import rclpy.time
 from sensor_msgs.msg import Image, CameraInfo
+from stereo_msgs.msg import DisparityImage
 
 import cv2 as cv
 import numpy as np
@@ -20,11 +21,11 @@ CAMERA_FRAME_HEIGHT = CAMERA_RESOLUTION_Y
 
 # image topic configuration
 LEFT_CAMERA_INFO_TOPIC = "left/camera_info"
-LEFT_CAMERA_IMAGE_RECT_TOPIC = "left/image_rect"
+LEFT_CAMERA_IMAGE_RECT_TOPIC = "left/image_rect_color"
 RIGHT_CAMERA_INFO_TOPIC = "right/camera_info"
-RIGHT_CAMERA_IMAGE_RECT_TOPIC = "right/image_rect"
+RIGHT_CAMERA_IMAGE_RECT_TOPIC = "right/image_rect_color"
 
-FRAME_ID = "stereo-camera"
+FRAME_ID = "/map"
 
 
 # DEPTH_CAMERA_LEFT_IMG_TOPIC = "stereo_left"
@@ -108,8 +109,9 @@ class StereoCameraDriver(Node):
         self.right_new_mtx, _ = cv.getOptimalNewCameraMatrix(RIGHT_CMTX, RIGHT_DIST, self.frame_size, 1, self.frame_size)
 
         # compute the full homogenous transformation matrix (with only top 3 rows)
-        self.left_transform = np.concatenate((LEFT_ROT, LEFT_TRANSLATE), axis=1)
-        self.right_transform = np.concatenate((RIGHT_ROT, RIGHT_TRANSLATE), axis=1)
+        # NOTE: conversion from cm to m
+        self.left_transform = np.concatenate((LEFT_ROT, LEFT_TRANSLATE/1_00), axis=1)
+        self.right_transform = np.concatenate((RIGHT_ROT, RIGHT_TRANSLATE/1_00), axis=1)
 
         self.prev_left_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
         self.prev_right_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
@@ -121,7 +123,7 @@ class StereoCameraDriver(Node):
         self.left_camera_image_publisher = self.create_publisher(Image, LEFT_CAMERA_IMAGE_RECT_TOPIC, 10)
         self.right_camera_image_publisher = self.create_publisher(Image, RIGHT_CAMERA_IMAGE_RECT_TOPIC, 5)
 
-
+        self.disparity_img_publisher = self.create_publisher(DisparityImage, "/disparity", 5)
 
     def camera_timer_callback(self):
         # read the camera frame
@@ -141,51 +143,51 @@ class StereoCameraDriver(Node):
         mapx, mapy = cv.initUndistortRectifyMap(RIGHT_CMTX, RIGHT_DIST, None, self.right_new_mtx, self.frame_size, 5)
         right_undistorted = cv.remap(right, mapx, mapy, cv.INTER_LINEAR)
 
-        # # publish camera info
-        # stamp = self.get_clock().now().to_msg()
+        # publish camera info
+        stamp = self.get_clock().now().to_msg()
 
-        # left_camera_info = CameraInfo()
-        # left_camera_info.header.stamp = stamp
-        # left_camera_info.header.frame_id = FRAME_ID
-        # left_camera_info.height = CAMERA_FRAME_HEIGHT
-        # left_camera_info.width = CAMERA_FRAME_WIDTH
-        # left_camera_info.k = LEFT_CMTX.flatten()
-        # left_camera_info.p = self.left_transform.flatten()
+        left_camera_info = CameraInfo()
+        left_camera_info.header.stamp = stamp
+        left_camera_info.header.frame_id = FRAME_ID
+        left_camera_info.height = CAMERA_FRAME_HEIGHT
+        left_camera_info.width = CAMERA_FRAME_WIDTH
+        left_camera_info.k = LEFT_CMTX.flatten()
+        left_camera_info.p = self.left_transform.flatten()
 
-        # right_camera_info = CameraInfo()
-        # right_camera_info.header.stamp = stamp
-        # right_camera_info.header.frame_id = FRAME_ID
-        # right_camera_info.height = CAMERA_FRAME_HEIGHT
-        # right_camera_info.width = CAMERA_FRAME_WIDTH
-        # right_camera_info.k = RIGHT_CMTX.flatten()
-        # right_camera_info.p = self.right_transform.flatten()
+        right_camera_info = CameraInfo()
+        right_camera_info.header.stamp = stamp
+        right_camera_info.header.frame_id = FRAME_ID
+        right_camera_info.height = CAMERA_FRAME_HEIGHT
+        right_camera_info.width = CAMERA_FRAME_WIDTH
+        right_camera_info.k = RIGHT_CMTX.flatten()
+        right_camera_info.p = self.right_transform.flatten()
 
-        # self.left_camera_info_publisher.publish(left_camera_info)
-        # self.right_camera_info_publisher.publish(right_camera_info)
+        self.left_camera_info_publisher.publish(left_camera_info)
+        self.right_camera_info_publisher.publish(right_camera_info)
 
-        # # publish corrected left and right images
-        # left_image = Image()
-        # left_image.header.stamp = stamp
-        # left_image.header.frame_id = FRAME_ID
-        # left_image.height = CAMERA_FRAME_HEIGHT
-        # left_image.width = CAMERA_FRAME_WIDTH
-        # left_image.encoding = "bgr8"
-        # left_image.is_bigendian = False
-        # left_image.step = CAMERA_FRAME_WIDTH * 3
-        # left_image.data = left_undistorted.data.tobytes()
+        # publish corrected left and right images
+        left_image = Image()
+        left_image.header.stamp = stamp
+        left_image.header.frame_id = FRAME_ID
+        left_image.height = CAMERA_FRAME_HEIGHT
+        left_image.width = CAMERA_FRAME_WIDTH
+        left_image.encoding = "bgr8"
+        left_image.is_bigendian = False
+        left_image.step = CAMERA_FRAME_WIDTH * 3
+        left_image.data = left_undistorted.data.tobytes()
 
-        # right_image = Image()
-        # right_image.header.stamp = stamp
-        # right_image.header.frame_id = FRAME_ID
-        # right_image.height = CAMERA_FRAME_HEIGHT
-        # right_image.width = CAMERA_FRAME_WIDTH
-        # right_image.encoding = "bgr8"
-        # right_image.is_bigendian = False
-        # right_image.step = CAMERA_FRAME_WIDTH * 3
-        # right_image.data = right_undistorted.data.tobytes()
+        right_image = Image()
+        right_image.header.stamp = stamp
+        right_image.header.frame_id = FRAME_ID
+        right_image.height = CAMERA_FRAME_HEIGHT
+        right_image.width = CAMERA_FRAME_WIDTH
+        right_image.encoding = "bgr8"
+        right_image.is_bigendian = False
+        right_image.step = CAMERA_FRAME_WIDTH * 3
+        right_image.data = right_undistorted.data.tobytes()
 
-        # self.left_camera_image_publisher.publish(left_image)
-        # self.right_camera_image_publisher.publish(right_image)
+        self.left_camera_image_publisher.publish(left_image)
+        self.right_camera_image_publisher.publish(right_image)
 
         self.get_logger().info("Processed camera frame...")
 
@@ -240,7 +242,7 @@ class StereoCameraDriver(Node):
         disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
         disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
 
-        print(disparity_grayscale_img_int)
+        # print(disparity_grayscale_img_int)
         cv.imshow("avg left disparity", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
 
         # filter/upscale disparity map using the camera image
@@ -261,15 +263,51 @@ class StereoCameraDriver(Node):
         disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
         disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
 
-        print(disparity_grayscale_img_int)
+        # print(disparity_grayscale_img_int)
         cv.imshow("filtered disparity", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
 
         # cv.imshow("filtered", np.clip(filtered_left_disparity, 0, 1600))
 
-        # depth = LEFT_CMTX[0,0]*BASELINE / np.clip(filtered_left_disparity, a_min=1,a_max=None)
+        depth = LEFT_CMTX[0,0]*BASELINE / np.clip(filtered_left_disparity, a_min=1,a_max=None)
         # cv.imshow("depth", 1-depth)
-
         
+        preconversion = np.float32(depth / np.max(np.clip(filtered_left_disparity, a_min=1, a_max=None)))
+        disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
+        disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
+
+        # print(disparity_grayscale_img_int)
+        cv.imshow("depth", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
+
+        # send the disparity in the disparity map to be turned into a point cloud by the node
+        # provided by the stereo_image_proc package
+        disparity_img = DisparityImage()
+        disparity_img.header.stamp = stamp
+        disparity_img.header.frame_id = "depth-camera"
+
+        disparity_img.f = LEFT_CMTX[0,0]
+        disparity_img.t = BASELINE / 1_00  # cm to m
+
+        min_dist = 0.1 # 10 cm
+        max_dist = 3 # 3 m
+        delta_dist = 0.05 # 5 cm
+
+        disparity_img.min_disparity = disparity_img.f*disparity_img.t / max_dist
+        disparity_img.max_disparity = disparity_img.f*disparity_img.t / min_dist
+        disparity_img.delta_d = disparity_img.f*disparity_img.t / delta_dist
+
+        disparity_img.valid_window.x_offset = 96
+        disparity_img.valid_window.y_offset = 96//2
+        disparity_img.valid_window.width = CAMERA_FRAME_WIDTH - 96
+        disparity_img.valid_window.height = CAMERA_FRAME_HEIGHT - 96//2
+
+        disparity_img.image.header.stamp = stamp
+        disparity_img.image.header.frame_id = "depth-camera"
+        disparity_img.image.height = CAMERA_FRAME_HEIGHT
+        disparity_img.image.width = CAMERA_FRAME_WIDTH
+        disparity_img.image.encoding = "64FC1"
+        disparity_img.image.is_bigendian = False
+        disparity_img.image.step = CAMERA_FRAME_WIDTH * 1
+        disparity_img.image.data = filtered_left_disparity.data.tobytes()
 
         # # error occurs in depth computation if the disparity is 0
         # clipped_avg_disparity = np.clip(avg_disparity, a_min=1, a_max=None)

@@ -19,7 +19,7 @@ def generate_launch_description():
                         'for some algorithms.'
         ),
         DeclareLaunchArgument(
-            name='use_color', default_value='True',
+            name='use_color', default_value='False',
             description='Generate point cloud with rgb data.'
         ),
         DeclareLaunchArgument(
@@ -107,34 +107,34 @@ def generate_launch_description():
         ),
 
         # now using all the launch arguments
-        Node(
-            package='stereo_image_proc',
-            executable='disparity_node',
-            namespace=LaunchConfiguration('namespace'),
-            parameters=[{
-                'approximate_sync': LaunchConfiguration('approximate_sync'),
-                'stereo_algorithm': LaunchConfiguration('stereo_algorithm'),
-                'prefilter_size': LaunchConfiguration('prefilter_size'),
-                'prefilter_cap': LaunchConfiguration('prefilter_cap'),
-                'correlation_window_size': LaunchConfiguration('correlation_window_size'),
-                'min_disparity': LaunchConfiguration('min_disparity'),
-                'disparity_range': LaunchConfiguration('disparity_range'),
-                'texture_threshold': LaunchConfiguration('texture_threshold'),
-                'speckle_size': LaunchConfiguration('speckle_size'),
-                'speckle_range': LaunchConfiguration('speckle_range'),
-                'disp12_max_diff': LaunchConfiguration('disp12_max_diff'),
-                'uniqueness_ratio': LaunchConfiguration('uniqueness_ratio'),
-                'P1': LaunchConfiguration('P1'),
-                'P2': LaunchConfiguration('P2'),
-                'sgbm_mode': LaunchConfiguration('sgbm_mode'),
-            }],
-            remappings=[
-                ('left/image_rect', [LaunchConfiguration('left_namespace'), '/image_rect']),
-                ('left/camera_info', [LaunchConfiguration('left_namespace'), '/camera_info']),
-                ('right/image_rect', [LaunchConfiguration('right_namespace'), '/image_rect']),
-                ('right/camera_info', [LaunchConfiguration('right_namespace'), '/camera_info']),
-            ]
-        ),
+        # Node(
+        #     package='stereo_image_proc',
+        #     executable='disparity_node',
+        #     namespace=LaunchConfiguration('namespace'),
+        #     parameters=[{
+        #         'approximate_sync': LaunchConfiguration('approximate_sync'),
+        #         'stereo_algorithm': LaunchConfiguration('stereo_algorithm'),
+        #         'prefilter_size': LaunchConfiguration('prefilter_size'),
+        #         'prefilter_cap': LaunchConfiguration('prefilter_cap'),
+        #         'correlation_window_size': LaunchConfiguration('correlation_window_size'),
+        #         'min_disparity': LaunchConfiguration('min_disparity'),
+        #         'disparity_range': LaunchConfiguration('disparity_range'),
+        #         'texture_threshold': LaunchConfiguration('texture_threshold'),
+        #         'speckle_size': LaunchConfiguration('speckle_size'),
+        #         'speckle_range': LaunchConfiguration('speckle_range'),
+        #         'disp12_max_diff': LaunchConfiguration('disp12_max_diff'),
+        #         'uniqueness_ratio': LaunchConfiguration('uniqueness_ratio'),
+        #         'P1': LaunchConfiguration('P1'),
+        #         'P2': LaunchConfiguration('P2'),
+        #         'sgbm_mode': LaunchConfiguration('sgbm_mode'),
+        #     }],
+        #     remappings=[
+        #         ('left/image_rect', [LaunchConfiguration('left_namespace'), '/image_rect']),
+        #         ('left/camera_info', [LaunchConfiguration('left_namespace'), '/camera_info']),
+        #         ('right/image_rect', [LaunchConfiguration('right_namespace'), '/image_rect']),
+        #         ('right/camera_info', [LaunchConfiguration('right_namespace'), '/camera_info']),
+        #     ]
+        # ),
         Node(
             package='stereo_image_proc',
             executable='point_cloud_node',
@@ -148,11 +148,11 @@ def generate_launch_description():
                 ('left/camera_info', [LaunchConfiguration('left_namespace'), '/camera_info']),
                 ('right/camera_info', [LaunchConfiguration('right_namespace'), '/camera_info']),
                 (
-                    'left/image_rect',
+                    'left/image_rect_color',
                     [LaunchConfiguration('left_namespace'), '/image_rect_color']
                 ),
                 (
-                    'right/image_rect',
+                    'right/image_rect_color',
                     [LaunchConfiguration('right_namespace'), '/image_rect_color']
                 ),
             ]
