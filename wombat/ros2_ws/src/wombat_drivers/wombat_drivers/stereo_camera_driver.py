@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 import rclpy.time
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo, PointCloud2, PointField
 from stereo_msgs.msg import DisparityImage
 
 import cv2 as cv
@@ -27,11 +27,8 @@ RIGHT_CAMERA_IMAGE_RECT_TOPIC = "right/image_rect_color"
 
 FRAME_ID = "/map"
 
-
-# DEPTH_CAMERA_LEFT_IMG_TOPIC = "stereo_left"
-# DEPTH_CAMERA_DISPARITY_MAP_TOPIC = "stereo_disparity"
-# DEPTH_CAMERA_CLOUD_TOPIC = "stereo_cloud"
-# DEPTH_CAMERA_CLOUD_FRAME_ID = "/map"
+DEPTH_CAMERA_CLOUD_TOPIC = "stereo_cloud"
+DEPTH_CAMERA_CLOUD_FRAME_ID = "/map"
 
 # camera intrinsics
 # these should ideally be parametrized but do this after if time permitting
@@ -73,19 +70,13 @@ RIGHT_TRANSLATE = np.asarray([
     [0.5600893156850932 ]
 ])
 
-# disparity calculations
-DISPARITY_WSIZE = 21
-DISPARITY_NUM_MAX = 96
 BASELINE = 5.976137772117957
-
-# disparity filtering
-WLS_SIGMA = 1.1
-WLS_LAMBDA = 8000.0
 NUM_PREV_CAPTURES = 2
 
-# point cloud transmission characteristics (m)
-# POINT_CLOUD_MIN_DIST = 0.1
-# POINT_CLOUD_MAX_DIST = 2
+POINT_CLOUD_MIN_Z = 0.1  # m
+POINT_CLOUD_MAX_Z = 2
+
+POINT_DOWNSAMPLE = 5
 
 
 class StereoCameraDriver(Node):
@@ -99,9 +90,9 @@ class StereoCameraDriver(Node):
 
         self.create_timer(1.0 / CAMERA_FPS, self.camera_timer_callback)
 
-        # self.cloud_publisher = self.create_publisher(
-        #     PointCloud, DEPTH_CAMERA_CLOUD_TOPIC, 4
-        # )
+        self.cloud_publisher = self.create_publisher(
+            PointCloud2, DEPTH_CAMERA_CLOUD_TOPIC, 4
+        )
 
         # compute new camera matrices
         self.frame_size = (CAMERA_FRAME_WIDTH, CAMERA_FRAME_HEIGHT)
@@ -124,6 +115,12 @@ class StereoCameraDriver(Node):
         self.right_camera_image_publisher = self.create_publisher(Image, RIGHT_CAMERA_IMAGE_RECT_TOPIC, 5)
 
         self.disparity_img_publisher = self.create_publisher(DisparityImage, "/disparity", 5)
+
+        # large computational cost so cache results
+        self.flattened_u_vals = np.tile(np.arange(CAMERA_FRAME_WIDTH)+1,(CAMERA_FRAME_HEIGHT,1)).flatten()
+        self.flattened_v_vals = np.tile((np.arange(CAMERA_FRAME_HEIGHT)+1).reshape((CAMERA_FRAME_HEIGHT,1)),(1,CAMERA_FRAME_WIDTH)).flatten()
+
+        self.resample_mask = np.tile(np.arange(POINT_DOWNSAMPLE),(CAMERA_FRAME_WIDTH*CAMERA_FRAME_HEIGHT)//2+1)[:CAMERA_FRAME_WIDTH*CAMERA_FRAME_HEIGHT] == (POINT_DOWNSAMPLE-1)
 
     def camera_timer_callback(self):
         # read the camera frame
@@ -248,7 +245,7 @@ class StereoCameraDriver(Node):
         # filter/upscale disparity map using the camera image
         wls_filter = cv.ximgproc.createDisparityWLSFilter(left_matcher)
 
-        lmbda = 20000 # regularization during filtering -> larger forces filtered disparity to adhere to source edges
+        lmbda = 8000 # regularization during filtering -> larger forces filtered disparity to adhere to source edges
         sigma_color = 2.0  # sensitivity to source image edges -> low value better adherence to source edges
         depth_discontinuity_radius = 2 # defines size of low confidence regions around discontinuities
         lrc_thresh = 24  # this value basically always good (threshold disparity diff in left consistency check)
@@ -276,6 +273,68 @@ class StereoCameraDriver(Node):
         disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
 
         # print(disparity_grayscale_img_int)
+
+
+        # generate the point cloud
+
+        min_dist = 0.1 # 10 cm
+        max_dist = 10 # 3 m
+        delta_dist = 0.05 # 5 cm
+
+        f = LEFT_CMTX[0,0]
+        t = BASELINE / 1_00 # cm to m
+
+        min_disparity = f*t / max_dist
+        max_disparity = f*t / min_dist
+
+        print(filtered_left_disparity)
+
+        print(f'min disparity: {min_disparity}')
+        print(f'max disparity: {max_disparity}')
+
+        flat_disparities = filtered_left_disparity.flatten()
+        print(self.resample_mask)
+        print(self.resample_mask.shape)
+        disparity_mask = np.logical_and(np.logical_and(flat_disparities > min_disparity, flat_disparities < max_disparity), self.resample_mask)
+        cloud_disparities = flat_disparities[disparity_mask]
+
+        print(cloud_disparities.shape)
+
+        cloud_z = np.float32(f*t / cloud_disparities)  # ensure float32
+        
+        u0 = LEFT_CMTX[0,2]
+        v0 = LEFT_CMTX[1,2]
+
+        cloud_x = np.float32(cloud_z / f * (self.flattened_u_vals[disparity_mask] - u0))
+        cloud_y = np.float32(cloud_z / f * (self.flattened_v_vals[disparity_mask] - v0))
+
+        cloud_msg = PointCloud2()
+        cloud_msg.header.stamp = stamp
+        cloud_msg.header.frame_id = "/map"
+
+        # unordered data (not 2d as invalid data has been filtered out)
+        cloud_msg.height = 1
+        cloud_msg.width = len(cloud_z)
+
+        cloud_msg.fields = [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+                            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+                            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
+
+        cloud_msg.is_bigendian = False
+        cloud_msg.point_step = len(cloud_msg.fields) * 4
+        cloud_msg.row_step = cloud_msg.width * cloud_msg.point_step
+        cloud_msg.is_dense = True  # all invalid points have been removed
+
+        cloud_msg.data = np.column_stack((cloud_x,cloud_y,cloud_z)).data.tobytes()
+
+        self.cloud_publisher.publish(cloud_msg)
+
+
+
+
+
+
+
         cv.imshow("depth", cv.applyColorMap(disparity_grayscale_img_int, cv.COLORMAP_JET))
 
         # send the disparity in the disparity map to be turned into a point cloud by the node
