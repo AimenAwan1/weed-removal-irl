@@ -1,14 +1,14 @@
 import rclpy
 
 from rclpy.node import Node
-from rclpy.lifecycle import State
 
-from sensor_msgs.msg import Image
-from sensor_msgs.msg import PointCloud
-from geometry_msgs.msg import Point32
+import rclpy.time
+from sensor_msgs.msg import Image, CameraInfo
 
 import cv2 as cv
 import numpy as np
+
+import time
 
 # camera configuration
 CAMERA_FILE = "/dev/video2"
@@ -18,63 +18,73 @@ CAMERA_RESOLUTION_Y = 600
 CAMERA_FRAME_WIDTH = CAMERA_RESOLUTION_X // 2
 CAMERA_FRAME_HEIGHT = CAMERA_RESOLUTION_Y
 
-# node configuration
-DEPTH_CAMERA_LEFT_IMG_TOPIC = "stereo_left"
-DEPTH_CAMERA_DISPARITY_MAP_TOPIC = "stereo_disparity"
-DEPTH_CAMERA_CLOUD_TOPIC = "stereo_cloud"
-DEPTH_CAMERA_CLOUD_FRAME_ID = "/map"
+# image topic configuration
+LEFT_CAMERA_INFO_TOPIC = "left/camera_info"
+LEFT_CAMERA_IMAGE_RECT_TOPIC = "left/image_rect"
+RIGHT_CAMERA_INFO_TOPIC = "right/camera_info"
+RIGHT_CAMERA_IMAGE_RECT_TOPIC = "right/image_rect"
+
+FRAME_ID = "stereo-camera"
+
+
+# DEPTH_CAMERA_LEFT_IMG_TOPIC = "stereo_left"
+# DEPTH_CAMERA_DISPARITY_MAP_TOPIC = "stereo_disparity"
+# DEPTH_CAMERA_CLOUD_TOPIC = "stereo_cloud"
+# DEPTH_CAMERA_CLOUD_FRAME_ID = "/map"
 
 # camera intrinsics
 # these should ideally be parametrized but do this after if time permitting
 
 # left camera
 # intrinsics
-LEFT_CMTX = np.asarray(
-    [
+LEFT_CMTX = np.asarray([
         [445.57261062314484, 0.0, 438.61173157687153],
         [0.0, 445.0452181722068, 261.0113152340737],
-        [0.0, 0.0, 1.0],
-    ]
-)
+        [0.0, 0.0, 1.0],])
 # spherical calibration
-LEFT_DIST = np.asarray(
-    [
+LEFT_DIST = np.asarray([
         0.007897877581497419,
         0.004819006269263674,
         -0.003462243675465205,
         -0.006716838607812541,
-        -0.010283980624587765,
-    ]
-)
+        -0.010283980624587765])
+LEFT_ROT = np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+LEFT_TRANSLATE = np.asarray([[0.0], [0.0], [0.0]]) 
 
 # right camera
-RIGHT_CMTX = np.asarray(
-    [
+RIGHT_CMTX = np.asarray([
         [448.709511107283, 0.0, 464.4920363621636],
         [0.0, 449.0174706756223, 267.76524208323667],
-        [0.0, 0.0, 1.0],
-    ]
-)
-RIGHT_DIST = np.asarray(
-    [
+        [0.0, 0.0, 1.0],])
+RIGHT_DIST = np.asarray([
         0.014225183134587135,
         -0.008648840923063178,
         -0.005587122643171826,
         -0.007907796339861127,
-        0.0001369880928167401,
-    ]
-)
-
-BASELINE = 5.976137772117957
+        0.0001369880928167401,])
+RIGHT_ROT = np.asarray([
+    [0.9998644746153682, -0.000311548008895979, 0.016460113607498973 ],
+    [0.0004183981007683558, 0.9999788625128324, -0.006488410481092999 ],
+    [-0.01645774423069253, 0.006494418017038709, 0.9998434703439619 ]])
+RIGHT_TRANSLATE = np.asarray([
+    [-5.976137772117957 ],
+    [0.03663837200847426 ],
+    [0.5600893156850932 ]
+])
 
 # disparity calculations
 DISPARITY_WSIZE = 21
 DISPARITY_NUM_MAX = 64
+BASELINE = 5.976137772117957
 
 # disparity filtering
 WLS_SIGMA = 1.5
 WLS_LAMBDA = 80000.0
 NUM_PREV_CAPTURES = 2
+
+# point cloud transmission characteristics (m)
+# POINT_CLOUD_MIN_DIST = 0.1
+# POINT_CLOUD_MAX_DIST = 2
 
 
 class StereoCameraDriver(Node):
@@ -88,22 +98,35 @@ class StereoCameraDriver(Node):
 
         self.create_timer(1.0 / CAMERA_FPS, self.camera_timer_callback)
 
-        self.cloud_publisher = self.create_publisher(
-            PointCloud, DEPTH_CAMERA_CLOUD_TOPIC, 4
-        )
+        # self.cloud_publisher = self.create_publisher(
+        #     PointCloud, DEPTH_CAMERA_CLOUD_TOPIC, 4
+        # )
 
         # compute new camera matrices
         self.frame_size = (CAMERA_FRAME_WIDTH, CAMERA_FRAME_HEIGHT)
         self.left_new_mtx, _ = cv.getOptimalNewCameraMatrix(LEFT_CMTX, LEFT_DIST, self.frame_size, 1, self.frame_size)
         self.right_new_mtx, _ = cv.getOptimalNewCameraMatrix(RIGHT_CMTX, RIGHT_DIST, self.frame_size, 1, self.frame_size)
 
+        # compute the full homogenous transformation matrix (with only top 3 rows)
+        self.left_transform = np.concatenate((LEFT_ROT, LEFT_TRANSLATE), axis=1)
+        self.right_transform = np.concatenate((RIGHT_ROT, RIGHT_TRANSLATE), axis=1)
+
         self.prev_disparities = np.zeros((NUM_PREV_CAPTURES,CAMERA_FRAME_HEIGHT,CAMERA_FRAME_WIDTH))
+
+        # publishers
+        self.left_camera_info_publisher = self.create_publisher(CameraInfo, LEFT_CAMERA_INFO_TOPIC, 10)
+        self.right_camera_info_publisher = self.create_publisher(CameraInfo, RIGHT_CAMERA_INFO_TOPIC, 5)
+
+        self.left_camera_image_publisher = self.create_publisher(Image, LEFT_CAMERA_IMAGE_RECT_TOPIC, 10)
+        self.right_camera_image_publisher = self.create_publisher(Image, RIGHT_CAMERA_IMAGE_RECT_TOPIC, 5)
+
 
 
     def camera_timer_callback(self):
         # read the camera frame
         ret, frame = self.cap.read()
         if not ret:
+            self.get_logger().error(f"Failed to read depth camera at '{CAMERA_FILE}'")
             return
         
         # separate into left and right images
@@ -117,23 +140,71 @@ class StereoCameraDriver(Node):
         mapx, mapy = cv.initUndistortRectifyMap(RIGHT_CMTX, RIGHT_DIST, None, self.right_new_mtx, self.frame_size, 5)
         right_undistorted = cv.remap(right, mapx, mapy, cv.INTER_LINEAR)
 
-        # convert to grayscale
-        left_grayscale = cv.cvtColor(left_undistorted, cv.COLOR_BGR2GRAY)
-        right_grayscale = cv.cvtColor(right_undistorted, cv.COLOR_BGR2GRAY)
+        # # publish camera info
+        # stamp = self.get_clock().now().to_msg()
 
-        # compute disparity map
+        # left_camera_info = CameraInfo()
+        # left_camera_info.header.stamp = stamp
+        # left_camera_info.header.frame_id = FRAME_ID
+        # left_camera_info.height = CAMERA_FRAME_HEIGHT
+        # left_camera_info.width = CAMERA_FRAME_WIDTH
+        # left_camera_info.k = LEFT_CMTX.flatten()
+        # left_camera_info.p = self.left_transform.flatten()
+
+        # right_camera_info = CameraInfo()
+        # right_camera_info.header.stamp = stamp
+        # right_camera_info.header.frame_id = FRAME_ID
+        # right_camera_info.height = CAMERA_FRAME_HEIGHT
+        # right_camera_info.width = CAMERA_FRAME_WIDTH
+        # right_camera_info.k = RIGHT_CMTX.flatten()
+        # right_camera_info.p = self.right_transform.flatten()
+
+        # self.left_camera_info_publisher.publish(left_camera_info)
+        # self.right_camera_info_publisher.publish(right_camera_info)
+
+        # # publish corrected left and right images
+        # left_image = Image()
+        # left_image.header.stamp = stamp
+        # left_image.header.frame_id = FRAME_ID
+        # left_image.height = CAMERA_FRAME_HEIGHT
+        # left_image.width = CAMERA_FRAME_WIDTH
+        # left_image.encoding = "bgr8"
+        # left_image.is_bigendian = False
+        # left_image.step = CAMERA_FRAME_WIDTH * 3
+        # left_image.data = left_undistorted.data.tobytes()
+
+        # right_image = Image()
+        # right_image.header.stamp = stamp
+        # right_image.header.frame_id = FRAME_ID
+        # right_image.height = CAMERA_FRAME_HEIGHT
+        # right_image.width = CAMERA_FRAME_WIDTH
+        # right_image.encoding = "bgr8"
+        # right_image.is_bigendian = False
+        # right_image.step = CAMERA_FRAME_WIDTH * 3
+        # right_image.data = right_undistorted.data.tobytes()
+
+        # self.left_camera_image_publisher.publish(left_image)
+        # self.right_camera_image_publisher.publish(right_image)
+
+        self.get_logger().info("Processed camera frame...")
+
+        # convert to grayscale
+        left_grayscale = cv.cvtColor(left, cv.COLOR_BGR2GRAY)
+        right_grayscale = cv.cvtColor(right, cv.COLOR_BGR2GRAY)
+
+        # # compute disparity map
         left_matcher = cv.StereoBM.create(DISPARITY_NUM_MAX, DISPARITY_WSIZE)
         right_matcher = cv.ximgproc.createRightMatcher(left_matcher)
 
         left_disparity = left_matcher.compute(left_grayscale, right_grayscale)
         right_disparity = right_matcher.compute(right_grayscale, left_grayscale)
 
-        # low pass filter the disparities
+        # # low pass filter the disparities
         kernel = np.ones((3,3))/9
         left_disparity_low_pass = cv.filter2D(left_disparity,-1,kernel)
         right_disparity_low_pass = cv.filter2D(right_disparity,-1,kernel)
 
-        # filter/upscale disparity map using the camera image
+        # # filter/upscale disparity map using the camera image
         wls_filter = cv.ximgproc.createDisparityWLSFilter(left_matcher)
         wls_filter.setLambda(WLS_LAMBDA)
         wls_filter.setSigmaColor(WLS_SIGMA)
@@ -152,7 +223,7 @@ class StereoCameraDriver(Node):
 
         # # NOTE: the following uses homogenous coordinates in SE(3)
 
-        # # parametrize the camera matrix into a homogenous matrix
+        # parametrize the camera matrix into a homogenous matrix
         # K = np.array([
         #     [LEFT_CMTX[0,0], 0, 0, LEFT_CMTX[0,2]],
         #     [0, LEFT_CMTX[1,1], 0, LEFT_CMTX[1,2]],
@@ -177,8 +248,11 @@ class StereoCameraDriver(Node):
         # cloud_msg = PointCloud()
         # cloud_msg.points = []
         # for i in range(world_p.shape[1]):
+        #     # horribly inefficient, update later to increase processing speed
         #     point = Point32()
         #     point.x = world_p[0,i]
+        #     if point.x < POINT_CLOUD_MIN_DIST or point.x > POINT_CLOUD_MAX_DIST:
+        #         continue
         #     point.y = world_p[1,i]
         #     point.z = world_p[2,i]
         #     cloud_msg.points.append(point)
@@ -186,13 +260,14 @@ class StereoCameraDriver(Node):
 
         # self.cloud_publisher.publish(cloud_msg)
         
-        self.get_logger().info("Published new cloud from depth camera!")
+        # self.get_logger().info("Published new cloud from depth camera!")
 
         # display (temporary)
-        max_visual_depth = 200
+        max_visual_depth = 1000 # 10 m
         visual_map = np.clip(avg_depth, a_min=0, a_max=max_visual_depth)/max_visual_depth
         visual_map = 1 - visual_map # recolor so light is closer
         cv.imshow("visual", visual_map)
+        cv.imshow("raw", left)
         # cv.imshow("original", left_disparity/np.max(left_disparity))
         # cv.imshow("filtered", left_disparity_low_pass/np.max(left_disparity_low_pass))
         # cv.imshow("left_filt", filtered_left_disparity)
@@ -215,3 +290,6 @@ def main(args=None):
 
     stereo_camera_driver_node.destroy_node()
     rclpy.shutdown()
+
+if __name__ == "__main__":
+    main()
