@@ -256,6 +256,8 @@ class StereoCameraDriver(Node):
         wls_filter.setLRCthresh(lrc_thresh)
         filtered_left_disparity = wls_filter.filter(avg_left_disparity, left_grayscale, disparity_map_right=avg_right_disparity)
 
+        np.save('depth_test.npy', filtered_left_disparity)
+
         preconversion = np.float32(filtered_left_disparity / np.max(np.clip(filtered_left_disparity, a_min=1, a_max=None)))
         disparity_grayscale_img = cv.cvtColor(preconversion, cv.COLOR_GRAY2BGR)
         disparity_grayscale_img_int = np.uint8(disparity_grayscale_img*255)
