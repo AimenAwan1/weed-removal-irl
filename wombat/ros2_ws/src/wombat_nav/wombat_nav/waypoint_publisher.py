@@ -4,12 +4,11 @@ import rclpy
 from rclpy.node import Node
 import subprocess
 import math
+import time
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
+from std_msgs.msg import Float64MultiArray
 from ament_index_python.packages import get_package_share_directory
-
-OBJECT_DETECTION_SCRIPT = "/home/aimen/weed-removal-irl/wombat/vision/flag_detection_video_new_alg.py"
-DETECTED_OBJECTS_FILE = "/home/aimen/weed-removal-irl/wombat/vision/detected_objects.txt"
 
 class WaypointPublisher(Node):
     def __init__(self):
@@ -17,7 +16,8 @@ class WaypointPublisher(Node):
 
         self.subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.target_pub = self.create_publisher(Point, 'target_position', 10)
-
+        self.create_subscription(Float64MultiArray, 'detected_objects', self.detection_callback, 10)
+        
         #current robot position
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -58,6 +58,19 @@ class WaypointPublisher(Node):
         cosy_cosp = 1 -2 * (q.y * q.y + q.z * q.z)
         self.robot_theta = math.atan2(siny_cosp, cosy_cosp)
 
+    def detection_callback(self, msg: Float64MultiArray):
+        if self.state == "DETECT":
+            branch_points = []
+            data = msg.data
+            for i in range (0, len(data), 2):
+                distance = data[i]
+                angle = data[i+1]
+
+                new_x = self.robot_x + distance * math.cos(self.robot_theta + angle)
+                new_y = self.robot_y + distance * math.sin(self.robot_theta + angle)
+                branch_points.append((new_x, new_y))
+                self.get_logger().info(f"Received branch waypoint: ({new_x:.2f}, {new_y:.2f})")
+            self.branch_waypoints = branch_points
 
     def timer_callback(self):
         if self.state == "MOVE_MAIN":
@@ -70,10 +83,15 @@ class WaypointPublisher(Node):
             if self.is_target_reached(target):
                 self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")
                 self.state = "DETECT"
-                self.run_object_detection()
-                self.process_detection()
+                self.detection_start_time = self.get_clock().now()
+            else:
+                self.publish_target(target)
 
-                #if objects detected, move to branch waypoints, else continue with main waypoints
+        #if objects detected, move to branch waypoints, else continue with main waypoints
+        elif self.state == 'DETECT':
+            now = self.get_clock().now()
+            dt = (now - self.detection_start_time).nanoseconds / 1e9
+            if dt > 1.0:
                 if self.branch_waypoints:
                     self.get_logger().info("Branch waypoint detected")
                     self.state = "MOVE_BRANCH"
@@ -81,13 +99,12 @@ class WaypointPublisher(Node):
                     self.publish_target(self.branch_waypoints[self.current_branch_index])
                 else:
                     self.current_main_index += 1
+                    self.state = "MOVE_MAIN"
                     if self.current_main_index < len(self.main_waypoints):
                         self.publish_target(self.main_waypoints[self.current_main_index])
-                    else: self.get_logger().info("Finished navigating main waypoints")
-            else:
-                self.publish_target(target)
-
-        
+                    else: 
+                        self.get_logger().info("Finished navigating main waypoints")
+            
         elif self.state == "MOVE_BRANCH":
             #if branch waypoints done, go back to main waypoints
             if self.current_branch_index >= len(self.branch_waypoints):
@@ -116,7 +133,8 @@ class WaypointPublisher(Node):
                         self.publish_target(self.main_waypoints[self.current_main_index])
                     else:
                         self.get_logger().info("Finished navigating main waypoints")
-            else: self.publish_target(target)
+            else: 
+                self.publish_target(target)
 
     def is_target_reached(self, target):
         tx, ty = target
@@ -129,43 +147,6 @@ class WaypointPublisher(Node):
         point.y = target[1]
         self.target_pub.publish(point)
         self.get_logger().info(f"Publishing target: ({point.x}, {point.y})")
-
-    def run_object_detection(self):
-        self.get_logger().info("Running object detection...")
-        try:
-            subprocess.run(["python3", OBJECT_DETECTION_SCRIPT], timeout=5)
-        except subprocess.TimeoutExpired:
-            self.get_logger().info("Object detection timeout reached.")
-        except Exception as e:
-            self.get_logger().error(f"Error running object detection: {e}")
-
-    def process_detection(self):
-        self.get_logger().info("Processing detection results...")
-        if not os.path.exists(DETECTED_OBJECTS_FILE):
-            self.get_logger().warn("Detection file not found.")
-            return
-        
-        branch_points = []
-        try:
-            with open(DETECTED_OBJECTS_FILE, "r") as f:
-                lines = f.readlines()
-        except Exception as e:
-            self.get_logger().error(f"Error reading detection file: {e}")
-            return
-        
-        for line in lines:
-            try:
-                distance, angle = map(float, line.split())
-                new_x = self.robot_x + distance * math.cos(self.robot_theta + angle)
-                new_y = self.robot_y + distance * math.sin(self.robot_theta + angle)
-                branch_points.append((new_x, new_y))
-                self.get_logger().info(f"Branch waypoint: ({new_x}, {new_y})")
-            except ValueError:
-                continue
-
-        # Clear the detection file for the next cycle.
-        open(DETECTED_OBJECTS_FILE, "w").close()
-        self.branch_waypoints = branch_points
     
 def main(args=None):
     rclpy.init(args=args)

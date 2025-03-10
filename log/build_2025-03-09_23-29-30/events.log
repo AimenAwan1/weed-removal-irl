@@ -1,0 +1,10 @@
+[0.000000] (-) TimerEvent: {}
+[0.000192] (-) JobUnselected: {'identifier': 'i2c-command-test-stm32'}
+[0.000224] (-) JobUnselected: {'identifier': 'stm32-motor-speed-control'}
+[0.000248] (-) JobUnselected: {'identifier': 'wombat_drivers'}
+[0.000270] (-) JobUnselected: {'identifier': 'wombat_host'}
+[0.000299] (-) JobUnselected: {'identifier': 'wombat_launch'}
+[0.000325] (-) JobUnselected: {'identifier': 'wombat_meercat_if'}
+[0.000345] (-) JobUnselected: {'identifier': 'wombat_msgs'}
+[0.000366] (-) JobUnselected: {'identifier': 'wombat_nav'}
+[0.000387] (-) EventReactorShutdown: {}
