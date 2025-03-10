@@ -109,18 +109,16 @@ class StereoCameraDriver(Node):
 
         # publishers
         self.left_camera_info_publisher = self.create_publisher(CameraInfo, LEFT_CAMERA_INFO_TOPIC, 10)
-        self.right_camera_info_publisher = self.create_publisher(CameraInfo, RIGHT_CAMERA_INFO_TOPIC, 5)
+        # self.right_camera_info_publisher = self.create_publisher(CameraInfo, RIGHT_CAMERA_INFO_TOPIC, 5)
 
         self.left_camera_image_publisher = self.create_publisher(Image, LEFT_CAMERA_IMAGE_RECT_TOPIC, 10)
-        self.right_camera_image_publisher = self.create_publisher(Image, RIGHT_CAMERA_IMAGE_RECT_TOPIC, 5)
+        # self.right_camera_image_publisher = self.create_publisher(Image, RIGHT_CAMERA_IMAGE_RECT_TOPIC, 5)
 
         self.disparity_img_publisher = self.create_publisher(DisparityImage, "/disparity", 5)
 
-        # large computational cost so cache results
+        # large computational cost so cache these arrays of u and v
         self.flattened_u_vals = np.tile(np.arange(CAMERA_FRAME_WIDTH)+1,(CAMERA_FRAME_HEIGHT,1)).flatten()
         self.flattened_v_vals = np.tile((np.arange(CAMERA_FRAME_HEIGHT)+1).reshape((CAMERA_FRAME_HEIGHT,1)),(1,CAMERA_FRAME_WIDTH)).flatten()
-
-        self.resample_mask = np.tile(np.arange(POINT_DOWNSAMPLE),(CAMERA_FRAME_WIDTH*CAMERA_FRAME_HEIGHT)//2+1)[:CAMERA_FRAME_WIDTH*CAMERA_FRAME_HEIGHT] == (POINT_DOWNSAMPLE-1)
 
     def camera_timer_callback(self):
         # read the camera frame
@@ -151,16 +149,16 @@ class StereoCameraDriver(Node):
         left_camera_info.k = LEFT_CMTX.flatten()
         left_camera_info.p = self.left_transform.flatten()
 
-        right_camera_info = CameraInfo()
-        right_camera_info.header.stamp = stamp
-        right_camera_info.header.frame_id = FRAME_ID
-        right_camera_info.height = CAMERA_FRAME_HEIGHT
-        right_camera_info.width = CAMERA_FRAME_WIDTH
-        right_camera_info.k = RIGHT_CMTX.flatten()
-        right_camera_info.p = self.right_transform.flatten()
+        # right_camera_info = CameraInfo()
+        # right_camera_info.header.stamp = stamp
+        # right_camera_info.header.frame_id = FRAME_ID
+        # right_camera_info.height = CAMERA_FRAME_HEIGHT
+        # right_camera_info.width = CAMERA_FRAME_WIDTH
+        # right_camera_info.k = RIGHT_CMTX.flatten()
+        # right_camera_info.p = self.right_transform.flatten()
 
         self.left_camera_info_publisher.publish(left_camera_info)
-        self.right_camera_info_publisher.publish(right_camera_info)
+        # self.right_camera_info_publisher.publish(right_camera_info)
 
         # publish corrected left and right images
         left_image = Image()
@@ -173,18 +171,18 @@ class StereoCameraDriver(Node):
         left_image.step = CAMERA_FRAME_WIDTH * 3
         left_image.data = left_undistorted.data.tobytes()
 
-        right_image = Image()
-        right_image.header.stamp = stamp
-        right_image.header.frame_id = FRAME_ID
-        right_image.height = CAMERA_FRAME_HEIGHT
-        right_image.width = CAMERA_FRAME_WIDTH
-        right_image.encoding = "bgr8"
-        right_image.is_bigendian = False
-        right_image.step = CAMERA_FRAME_WIDTH * 3
-        right_image.data = right_undistorted.data.tobytes()
+        # right_image = Image()
+        # right_image.header.stamp = stamp
+        # right_image.header.frame_id = FRAME_ID
+        # right_image.height = CAMERA_FRAME_HEIGHT
+        # right_image.width = CAMERA_FRAME_WIDTH
+        # right_image.encoding = "bgr8"
+        # right_image.is_bigendian = False
+        # right_image.step = CAMERA_FRAME_WIDTH * 3
+        # right_image.data = right_undistorted.data.tobytes()
 
         self.left_camera_image_publisher.publish(left_image)
-        self.right_camera_image_publisher.publish(right_image)
+        # self.right_camera_image_publisher.publish(right_image)
 
         self.get_logger().info("Processed camera frame...")
 
@@ -206,7 +204,6 @@ class StereoCameraDriver(Node):
         speckle_window_size = 50
         speckle_range = 5
         mode = 0  # normal sgbm mode for now
-
 
         left_matcher = cv.StereoSGBM.create(min_disparity, num_disparities, block_size, p1, p2, disp_12_max_diff, pre_filter_cap, uniqueness_ratio, speckle_window_size, speckle_range, mode)
         right_matcher = cv.ximgproc.createRightMatcher(left_matcher)
@@ -286,47 +283,40 @@ class StereoCameraDriver(Node):
         f = LEFT_CMTX[0,0]
         t = BASELINE / 1_00 # cm to m
 
+        # clip elements that are within range
         min_disparity = f*t / max_dist
         max_disparity = f*t / min_dist
-
-        print(filtered_left_disparity)
-
-        print(f'min disparity: {min_disparity}')
-        print(f'max disparity: {max_disparity}')
-
         flat_disparities = filtered_left_disparity.flatten()
-        print(self.resample_mask)
-        print(self.resample_mask.shape)
-        disparity_mask = np.logical_and(np.logical_and(flat_disparities > min_disparity, flat_disparities < max_disparity), self.resample_mask)
-        cloud_disparities = flat_disparities[disparity_mask]
-
-        print(cloud_disparities.shape)
-
-        cloud_z = np.float32(f*t / cloud_disparities)  # ensure float32
+        clipped_mask = np.logical_and(flat_disparities >= min_disparity, flat_disparities <= max_disparity)
         
+        # randomzied downsampling (cutoff using a uniform distribution)
+        downsample_fraction = 0.01/2
+        downsampled_mask = np.random.uniform(size=(len(flat_disparities))) <= downsample_fraction
+
+        mask = np.logical_and(clipped_mask, downsampled_mask)
+        cloud_disparities = flat_disparities[mask]
+
+        print(f'Final number of point cloud points: {len(cloud_disparities)}')
+
         u0 = LEFT_CMTX[0,2]
         v0 = LEFT_CMTX[1,2]
+        cloud_z = np.float32(f*t / cloud_disparities)  # ensure float32
+        cloud_x = np.float32(cloud_z / f * (self.flattened_u_vals[mask] - u0))
+        cloud_y = np.float32(cloud_z / f * (self.flattened_v_vals[mask] - v0))
 
-        cloud_x = np.float32(cloud_z / f * (self.flattened_u_vals[disparity_mask] - u0))
-        cloud_y = np.float32(cloud_z / f * (self.flattened_v_vals[disparity_mask] - v0))
-
+        # generate the point cloud msg using an unordered array
         cloud_msg = PointCloud2()
         cloud_msg.header.stamp = stamp
         cloud_msg.header.frame_id = "/map"
-
-        # unordered data (not 2d as invalid data has been filtered out)
-        cloud_msg.height = 1
+        cloud_msg.height = 1  # required for the unordered array
         cloud_msg.width = len(cloud_z)
-
         cloud_msg.fields = [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
                             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
                             PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
-
         cloud_msg.is_bigendian = False
         cloud_msg.point_step = len(cloud_msg.fields) * 4
         cloud_msg.row_step = cloud_msg.width * cloud_msg.point_step
         cloud_msg.is_dense = True  # all invalid points have been removed
-
         cloud_msg.data = np.column_stack((cloud_x,cloud_y,cloud_z)).data.tobytes()
 
         self.cloud_publisher.publish(cloud_msg)
@@ -341,34 +331,34 @@ class StereoCameraDriver(Node):
 
         # send the disparity in the disparity map to be turned into a point cloud by the node
         # provided by the stereo_image_proc package
-        disparity_img = DisparityImage()
-        disparity_img.header.stamp = stamp
-        disparity_img.header.frame_id = "depth-camera"
+        # disparity_img = DisparityImage()
+        # disparity_img.header.stamp = stamp
+        # disparity_img.header.frame_id = "depth-camera"
 
-        disparity_img.f = LEFT_CMTX[0,0]
-        disparity_img.t = BASELINE / 1_00  # cm to m
+        # disparity_img.f = LEFT_CMTX[0,0]
+        # disparity_img.t = BASELINE / 1_00  # cm to m
 
-        min_dist = 0.1 # 10 cm
-        max_dist = 3 # 3 m
-        delta_dist = 0.05 # 5 cm
+        # min_dist = 0.1 # 10 cm
+        # max_dist = 3 # 3 m
+        # delta_dist = 0.05 # 5 cm
 
-        disparity_img.min_disparity = disparity_img.f*disparity_img.t / max_dist
-        disparity_img.max_disparity = disparity_img.f*disparity_img.t / min_dist
-        disparity_img.delta_d = disparity_img.f*disparity_img.t / delta_dist
+        # disparity_img.min_disparity = disparity_img.f*disparity_img.t / max_dist
+        # disparity_img.max_disparity = disparity_img.f*disparity_img.t / min_dist
+        # disparity_img.delta_d = disparity_img.f*disparity_img.t / delta_dist
 
-        disparity_img.valid_window.x_offset = 96
-        disparity_img.valid_window.y_offset = 96//2
-        disparity_img.valid_window.width = CAMERA_FRAME_WIDTH - 96
-        disparity_img.valid_window.height = CAMERA_FRAME_HEIGHT - 96//2
+        # disparity_img.valid_window.x_offset = 96
+        # disparity_img.valid_window.y_offset = 96//2
+        # disparity_img.valid_window.width = CAMERA_FRAME_WIDTH - 96
+        # disparity_img.valid_window.height = CAMERA_FRAME_HEIGHT - 96//2
 
-        disparity_img.image.header.stamp = stamp
-        disparity_img.image.header.frame_id = "depth-camera"
-        disparity_img.image.height = CAMERA_FRAME_HEIGHT
-        disparity_img.image.width = CAMERA_FRAME_WIDTH
-        disparity_img.image.encoding = "64FC1"
-        disparity_img.image.is_bigendian = False
-        disparity_img.image.step = CAMERA_FRAME_WIDTH * 1
-        disparity_img.image.data = filtered_left_disparity.data.tobytes()
+        # disparity_img.image.header.stamp = stamp
+        # disparity_img.image.header.frame_id = "depth-camera"
+        # disparity_img.image.height = CAMERA_FRAME_HEIGHT
+        # disparity_img.image.width = CAMERA_FRAME_WIDTH
+        # disparity_img.image.encoding = "64FC1"
+        # disparity_img.image.is_bigendian = False
+        # disparity_img.image.step = CAMERA_FRAME_WIDTH * 1
+        # disparity_img.image.data = filtered_left_disparity.data.tobytes()
 
         # # error occurs in depth computation if the disparity is 0
         # clipped_avg_disparity = np.clip(avg_disparity, a_min=1, a_max=None)

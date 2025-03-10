@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # load the saved disparity map
-disparity = np.load("garbage_can_depth_test.npy")
+disparity = np.load("hand_depth_test.npy")
 
 # crop the disparity to remove the bars
 offset_x = 42
@@ -40,7 +40,7 @@ x = (depth / f * (u_vals[offset_y:,offset_x:] - u0)).flatten()
 y = (depth / f * (v_vals[offset_y:,offset_x:] - v0)).flatten()
 
 # perform randomized downsampling (cutoff using a uniformly random distribution)
-downsample_fraction = 0.01/2
+downsample_fraction = 0.01
 idxs = np.random.uniform(size=(len(z))) <= downsample_fraction
 
 x_downsampled = x[idxs]
