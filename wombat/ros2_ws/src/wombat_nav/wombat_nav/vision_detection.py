@@ -83,14 +83,14 @@ def merge_rectangles(rects, threshold=30.0):
 
 class VisionNode(Node):
     def __init__(self):
-        super().__init__('vision_node')
+        super().__init__('vision_detection')
         self.publisher = self.create_publisher(Float64MultiArray, 'detected_objects', 10)
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-        cap = cv.VideoCapture('/dev/video2')
-        cap.set(cv.CAP_PROP_FPS, 20)
-        cap.set(cv.CAP_PROP_FRAME_WIDTH, CAPTURE_RESOLUTION_X)
-        cap.set(cv.CAP_PROP_FRAME_HEIGHT, CAPTURE_RESOLUTION_Y)
+        self.cap = cv.VideoCapture('/dev/video2')
+        self.cap.set(cv.CAP_PROP_FPS, 20)
+        self.cap.set(cv.CAP_PROP_FRAME_WIDTH, CAPTURE_RESOLUTION_X)
+        self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, CAPTURE_RESOLUTION_Y)
         
         # compute new camera matrices
         self.left_new_mtx, _ = cv.getOptimalNewCameraMatrix(left_cmtx,left_dist,(FRAME_WIDTH,FRAME_HEIGHT),1,(FRAME_WIDTH,FRAME_HEIGHT))

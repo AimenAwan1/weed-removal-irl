@@ -22,6 +22,8 @@ setup(
         'console_scripts': [
             'differential_drive_node = wombat_nav.differential_drive:main',
             'waypoint_publisher = wombat_nav.waypoint_publisher:main',
+            'object_centering = wombat_nav.object_centering:main',
+            'vision_detection = wombat_nav.vision_detection:main',
         ],
     },
 )

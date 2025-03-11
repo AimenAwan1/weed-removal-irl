@@ -26,10 +26,10 @@ class InverseKinematicsController(Node):
         self.odom_subscription = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
         self.cmd_vel = Twist()
         
-        description_pkg = get_package_share_directory('name_description')
-        properties_file = os.path.join(description_pkg,'config','properties.yaml')
-        with open(properties_file,'r') as file:
-            properties = yaml.load(file,Loader=yaml.SafeLoader)
+        #description_pkg = get_package_share_directory('name_description')
+        #properties_file = os.path.join(description_pkg,'config','properties.yaml')
+        #with open(properties_file,'r') as file:
+        #    properties = yaml.load(file,Loader=yaml.SafeLoader)
         self.wheel_separation = 0.5348 #float(properties['wheel_separation'])
         self.wheel_radius = 0.254 #float(properties['wheel_radius'])
         self.get_logger().info(f'{self.get_name()} has started.')
