@@ -78,6 +78,22 @@ POINT_CLOUD_MAX_Z = 2
 
 POINT_DOWNSAMPLE = 5
 
+# sgbm parameters
+min_disparity = 11
+num_disparities = 64  # multiple of 16
+block_size =11
+P1 = 224 # usually 8*3*block_size**2
+P2 = 1614 # usually 32*3*block_size**2
+disp12_max_diff = 12
+pre_filter_cap = 24
+uniqueness_ratio = 5
+speckle_window_size = 200
+speckle_range = 2
+mode = cv.STEREO_SGBM_MODE_SGBM  # default mode
+
+# guided upsampling parameters
+guided_radius = 40
+guided_epsilon = 0.12
 
 class StereoCameraDriver(Node):
     def __init__(self):
@@ -137,6 +153,12 @@ class StereoCameraDriver(Node):
 
         mapx, mapy = cv.initUndistortRectifyMap(RIGHT_CMTX, RIGHT_DIST, None, self.right_new_mtx, self.frame_size, 5)
         right_undistorted = cv.remap(right, mapx, mapy, cv.INTER_LINEAR)
+
+        np.save("left_img_distorted.npy", left)
+        np.save("right_img_distorted.npy", right)
+
+        np.save("left_img.npy", left_undistorted)
+        np.save("right_img.npy", right_undistorted)
 
         # publish camera info
         stamp = self.get_clock().now().to_msg()
