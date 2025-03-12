@@ -13,12 +13,12 @@ def generate_launch_description():
                 package="wombat_drivers",
                 executable="bno085_driver_node",
                 name="bno085_driver_node"
-            )
+            ),
             Node(
                 package="wombat_nav",
                 executable="vision_detection",
                 name="vision_detection"
-            )
+            ),
             Node(
                 package="wombat_nav",
                 executable="object_centering",

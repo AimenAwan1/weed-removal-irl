@@ -1,13 +1,14 @@
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import Float32
 from std_msgs.msg import Float64MultiArray
 
 class ObjectCentering(Node):
     def __init__(self):
         super().__init__('object_centering')
-
-        self.cmd_vel_pub = self.create_publisher(Float64MultiArray,'wheel_velocity',10)
-        self.cmd_vel_pub = self.create_publisher(Float64MultiArray,'wheel_velocity',10)
+        self.get_logger().info('Initializing object centering node')
+        self.cmd_vel_left_pub = self.create_publisher(Float32,'cmd_left_wheel_vel_radps',10)
+        self.cmd_vel_right_pub = self.create_publisher(Float32,'cmd_right_wheel_vel_radps',10)
         
         self.create_subscription(Float64MultiArray, 'detected_objects', self.detection_callback, 10)
 
@@ -37,14 +38,12 @@ class ObjectCentering(Node):
         left_wheel_velocity = linear_velocity/self.wheel_radius-angular_velocity*self.wheel_separation/(2*self.wheel_radius)
         right_wheel_velocity = linear_velocity/self.wheel_radius+angular_velocity*self.wheel_separation/(2*self.wheel_radius) 
 
-        cmd = Float64MultiArray()
-        cmd.data = [left_wheel_velocity, right_wheel_velocity]
-        self.command_publisher.publish(cmd)
+        self.cmd_vel_left_pub.publish(Float32(data=left_wheel_velocity))
+        self.cmd_vel_right_pub.publish(Float32(data=right_wheel_velocity))
 
     def stop_robot(self):
-        cmd = Float64MultiArray()
-        cmd.data = [0.0, 0.0]
-        self.cmd_vel_pub.publish(cmd)
+        self.cmd_vel_left_pub.publish(Float32(data=0.0))
+        self.cmd_vel_right_pub.publish(Float32(data=0.0))
 
 def main(args=None):
     rclpy.init(args=args)

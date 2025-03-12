@@ -10,7 +10,7 @@ import math
 # BRG color values
 #yellow
 UPPER_MATCH_COLOR = np.array([153, 255, 255])
-LOWER_MATCH_COLOR = np.array([30, 128, 170])
+LOWER_MATCH_COLOR = np.array([30, 120, 0])
 #white
 #LOWER_MATCH_COLOR = np.array([150,150,150])
 #UPPER_MATCH_COLOR = np.array([250, 250, 250])
@@ -64,7 +64,7 @@ class VisionNode(Node):
         self.publisher = self.create_publisher(Float64MultiArray, 'detected_objects', 10)
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-        self.cap = cv.VideoCapture('/dev/video2')
+        self.cap = cv.VideoCapture('/dev/video0')
         self.cap.set(cv.CAP_PROP_FPS, 20)
         
     def timer_callback(self):
@@ -73,6 +73,7 @@ class VisionNode(Node):
             self.get_logger().error('Failed to capture frame')
             return
         
+        self.get_logger().info('Reading camera frame')
         mask = cv.inRange(frame, LOWER_MATCH_COLOR, UPPER_MATCH_COLOR)
         edges = cv.Canny(mask, 100, 200)
         contours, _ = cv.findContours(edges, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -105,7 +106,7 @@ class VisionNode(Node):
         msg = Float64MultiArray()
         msg.data = detected_objects
         self.publisher.publish(msg)
-        self.get_logger().info('check 5')
+        self.get_logger().info('Published data')
 
         #cv.imshow('Mask', mask)
         #cv.imshow('Edges', edges)
