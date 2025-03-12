@@ -48,7 +48,7 @@ def calculate_distance(focal_length, real_width, width_in_pixels):
     return (real_width * focal_length) / width_in_pixels
 
 def main():
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(2)
     
     while True:
         ret, frame = cap.read()

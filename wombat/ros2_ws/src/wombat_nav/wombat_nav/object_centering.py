@@ -7,6 +7,8 @@ class ObjectCentering(Node):
         super().__init__('object_centering')
 
         self.cmd_vel_pub = self.create_publisher(Float64MultiArray,'wheel_velocity',10)
+        self.cmd_vel_pub = self.create_publisher(Float64MultiArray,'wheel_velocity',10)
+        
         self.create_subscription(Float64MultiArray, 'detected_objects', self.detection_callback, 10)
 
         self.frame_center = 300
