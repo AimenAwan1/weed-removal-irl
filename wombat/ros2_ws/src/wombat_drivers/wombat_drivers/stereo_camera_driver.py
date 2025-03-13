@@ -278,8 +278,23 @@ class StereoCameraDriver(Node):
         left_disparity = left_matcher.compute(left_grayscale, right_grayscale)
 
         if self.display_frames:
+            render_max_disparity = FOCAL_LEN * BASELINE / (min_depth*100) # note converison to cm
+            render_min_disparity = FOCAL_LEN * BASELINE / (max_depth*100)
+
+            # print(f'Render max disparity: {render_max_disparity}')
+            # print(f'Render min disparity: {render_min_disparity}')
+
+            left_disparity_adjusted = np.copy(left_disparity)
+
+            # print(left_disparity_adjusted)
+
+            # print(left_disparity_adjusted < render_min_disparity)
+
+            # left_disparity_adjusted[left_disparity_adjusted > render_max_disparity] = 0
+            # left_disparity_adjusted[left_disparity_adjusted < render_min_disparity] = 0
+
             left_disparity_normalized = cv.normalize(
-                left_disparity, None, 0, 255, cv.NORM_MINMAX
+                left_disparity_adjusted, None, 0, 255, cv.NORM_MINMAX
             )
             left_disparity_normalized = np.uint8(left_disparity_normalized)
             cv.imshow("Left Disparity Map", left_disparity_normalized)
@@ -331,7 +346,7 @@ class StereoCameraDriver(Node):
         # generate the point cloud msg using an unordered array
         cloud_msg = PointCloud2()
         cloud_msg.header.stamp = stamp
-        cloud_msg.header.frame_id = "/map"
+        cloud_msg.header.frame_id = "camera_link"
         cloud_msg.height = 1  # required for the unordered array
         cloud_msg.width = len(cloud_z)
         cloud_msg.fields = [
