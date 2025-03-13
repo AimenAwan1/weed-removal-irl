@@ -39,7 +39,7 @@ class WaypointPublisher(Node):
 
     def load_waypoints(self):
         package_share_directory = get_package_share_directory('wombat_nav')
-        yaml_file = os.path.join(package_share_directory, 'wombat_nav', 'main_waypoints.yaml')
+        yaml_file = os.path.join(package_share_directory, 'config', 'main_waypoints.yaml')
         try:
             with open(yaml_file, 'r') as f:
                 data = yaml.safe_load(f)

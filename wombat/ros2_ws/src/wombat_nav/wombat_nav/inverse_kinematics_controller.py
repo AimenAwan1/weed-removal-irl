@@ -34,9 +34,9 @@ class InverseKinematicsController(Node):
         self.kp_linear = 0.5
         self.ki_linear = 0.005
         self.kd_linear = 0.001
-        self.kp_angular = 5.0 #1.0
-        self.ki_angular = 1.1234 #0.01
-        self.kd_angular = 0.1 #0.01
+        self.kp_angular = 1.0 #5.0
+        self.ki_angular = 0.01 #1.1234
+        self.kd_angular = 0.01 #0.1
 
         self.prev_error_linear = 0.0
         self.integral_linear = 0.0
