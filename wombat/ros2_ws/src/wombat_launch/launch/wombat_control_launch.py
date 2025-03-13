@@ -41,6 +41,28 @@ def generate_launch_description():
                 package="wombat_drivers",
                 executable="bno085_driver_node",
             ),
+            Node(  # describes the transformation from the base_link to camera_link
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                arguments=[
+                    "--x",
+                    "0.30",
+                    "--y",
+                    "0",
+                    "--z",
+                    "0.235",
+                    "--roll",
+                    "-1.919862177193763",
+                    "--pitch",
+                    "0",
+                    "--yaw",
+                    "-1.570796326794897",
+                    "--frame-id",
+                    "base_link",
+                    "--child-frame-id",
+                    "camera_link",
+                ],
+            ),
             # visual odometry and mapping (taken primarily from the example
             # of using the real sense camera)
             IncludeLaunchDescription(
