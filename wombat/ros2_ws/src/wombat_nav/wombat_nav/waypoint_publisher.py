@@ -39,7 +39,7 @@ class WaypointPublisher(Node):
 
     def load_waypoints(self):
         package_share_directory = get_package_share_directory('wombat_nav')
-        yaml_file = os.path.join(package_share_directory, 'main_waypoints.yaml')
+        yaml_file = os.path.join(package_share_directory, 'wombat_nav', 'main_waypoints.yaml')
         try:
             with open(yaml_file, 'r') as f:
                 data = yaml.safe_load(f)
@@ -122,6 +122,9 @@ class WaypointPublisher(Node):
             target = self.branch_waypoints[self.current_branch_index]
             if self.is_target_reached(target):
                 self.get_logger().info(f"Reached branch waypoint {self.current_branch_index}: {target}")
+                
+                self.call_object_centering_script()
+                
                 self.current_branch_index += 1
                 if self.current_branch_index < len(self.branch_waypoints):
                     self.publish_target(self.branch_waypoints[self.current_branch_index])
@@ -135,6 +138,15 @@ class WaypointPublisher(Node):
                         self.get_logger().info("Finished navigating main waypoints")
             else: 
                 self.publish_target(target)
+    
+    def call_object_centering_script(self):
+        try:
+            self.get_logger().info("Calling object centering script...")
+            subprocess.run(['ros2', 'run', 'wombat_nav', 'object_centering'], check=True)
+        except subprocess.CalledProcessError as e:
+            self.get_logger().error(f"Error calling object centering script: {e}")
+        except Exception as e:
+            self.get_logger().error(f"Unexpected error: {e}")
 
     def is_target_reached(self, target):
         tx, ty = target
@@ -168,5 +180,4 @@ def main(args=None):
         rclpy.shutdown() 
 
 if __name__=='__main__':
-    main()
-        
+    main()       

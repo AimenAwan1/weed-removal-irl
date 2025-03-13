@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
 # other libraries
-from typing import List
-import os
-import yaml
 import math
 
 # package module
@@ -16,25 +13,19 @@ from rclpy.node import Node
 from geometry_msgs.msg import Point, Twist
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import Float32
-from ament_index_python.packages import get_package_share_directory
 from nav_msgs.msg import Odometry
 
 class InverseKinematicsController(Node):
     def __init__(self):
         super().__init__('inverse_kinematics_controller')
-        self.left_wheel_speed_publisher = self.create_publisher(Float32, "left_wheel_speed_radps", 10)
-        self.right_wheel_speed_publisher = self.create_publisher(Float32, "right_wheel_speed_radps", 10)
-        #self.command_publisher = self.create_publisher(Float64MultiArray,'wheel_velocity',10)
+        self.left_wheel_speed_publisher = self.create_publisher(Float32, "cmd_left_wheel_vel_radps", 10)
+        self.right_wheel_speed_publisher = self.create_publisher(Float32, "cmd_right_wheel_vel_radps", 10)
         self.cmd_vel_subscription = self.create_subscription(Point,'target_position',self.target_callback,10)
         self.odom_subscription = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
         self.cmd_vel = Twist()
         
-        #description_pkg = get_package_share_directory('name_description')
-        #properties_file = os.path.join(description_pkg,'config','properties.yaml')
-        #with open(properties_file,'r') as file:
-        #    properties = yaml.load(file,Loader=yaml.SafeLoader)
-        self.wheel_separation = 0.5348 #float(properties['wheel_separation'])
-        self.wheel_radius = 0.254 #float(properties['wheel_radius'])
+        self.wheel_separation = 0.5348 
+        self.wheel_radius = 0.254 
         self.get_logger().info(f'{self.get_name()} has started.')
 
         self.target_position = None
@@ -113,7 +104,6 @@ class InverseKinematicsController(Node):
          
         self.left_wheel_speed_publisher.publish(Float32(data=cmd.data[0]))
         self.right_wheel_speed_publisher.publish(Float32(data=cmd.data[1]))
-        #self.command_publisher.publish(cmd) 
 
     def inverse_kinematics(self,v,w):
         left_wheel_velocity = v/self.wheel_radius-w*self.wheel_separation/(2*self.wheel_radius)

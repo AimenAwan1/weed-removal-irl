@@ -18,29 +18,21 @@ LOWER_MATCH_COLOR = np.array([30, 120, 0])
 KNOWN_WIDTH_CM = 11  
 FOCAL_LENGTH = 886.9545454545455
 
-OUTPUT_FILE = "detected_objects.txt"
-
 def merge_rectangles(self, rects, threshold=30.0):
     
-    self.get_logger().info(' merge 1')
     merged = []
-    self.get_logger().info(' merge 2')
 
     while rects:
         x, y, w, h = rects.pop(0)
-        self.get_logger().info(' merge 3')
         merged_rect = (x, y, x+w, y+h)
-        self.get_logger().info(' merge 4')
 
         i = 0
         while i < len(rects):
             x2, y2, w2, h2 = rects[i]
             other_rect = (x2, y2, x2+w2, y2+h2)
-            self.get_logger().info(' merge 5')
 
             if (max(merged_rect[0], other_rect[0]) - min(merged_rect[2], other_rect[2]) <= threshold and
                 max(merged_rect[1], other_rect[1]) - min(merged_rect[3], other_rect[3]) <= threshold):
-                self.get_logger().info(' merge 6')
                 merged_rect = (
                     min(merged_rect[0], other_rect[0]),
                     min(merged_rect[1], other_rect[1]),
@@ -52,7 +44,6 @@ def merge_rectangles(self, rects, threshold=30.0):
             i += 1
 
         merged.append(merged_rect)
-        self.get_logger().info(' merge 7')
     return merged
 
 def calculate_distance(focal_length, real_width, width_in_pixels):
@@ -64,7 +55,7 @@ class VisionNode(Node):
         self.publisher = self.create_publisher(Float64MultiArray, 'detected_objects', 10)
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-        self.cap = cv.VideoCapture('/dev/video0')
+        self.cap = cv.VideoCapture(0)
         self.cap.set(cv.CAP_PROP_FPS, 20)
         
     def timer_callback(self):
@@ -102,15 +93,15 @@ class VisionNode(Node):
             rect_img = cv.rectangle(rect_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv.putText(rect_img, f"{distance:.2f} cm", (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-
         msg = Float64MultiArray()
         msg.data = detected_objects
         self.publisher.publish(msg)
         self.get_logger().info('Published data')
 
-        #cv.imshow('Mask', mask)
-        #cv.imshow('Edges', edges)
-        #cv.imshow('Rect Img', rect_img)
+        cv.imshow('Mask', mask)
+        cv.imshow('Edges', edges)
+        cv.imshow('Rect Img', rect_img)
+        cv.waitKey(1)
 
     def destroy(self):
         if self.cap:

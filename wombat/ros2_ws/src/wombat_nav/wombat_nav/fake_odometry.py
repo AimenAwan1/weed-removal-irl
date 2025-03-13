@@ -21,8 +21,8 @@ class FakeOdometry(Node):
         self.left_wheel_velocity = 0.0
         self.right_wheel_velocity = 0.0
 
-        self.create_subscription(Float32, "left_wheel_speed_radps", self.left_wheel_callback, 10)
-        self.create_subscription(Float32, "right_wheel_speed_radps", self.right_wheel_callback, 10)
+        self.create_subscription(Float32, "cmd_left_wheel_vel_radps", self.left_wheel_callback, 10)
+        self.create_subscription(Float32, "cmd_right_wheel_vel_radps", self.right_wheel_callback, 10)
         
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
         self.timer = self.create_timer(0.02, self.update_odometry)
