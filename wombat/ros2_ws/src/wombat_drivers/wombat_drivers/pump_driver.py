@@ -25,7 +25,7 @@ class PumpDriver(Node):
 
 
     def activate_callback(self, pump_on):
-        if pump_on == true
+        if pump_on == true:
             # turn on GPIO
             GPIO.output(PUMP_PIN, GPIO.HIGH)
             self.get_logger().info("Pump is ON!")
