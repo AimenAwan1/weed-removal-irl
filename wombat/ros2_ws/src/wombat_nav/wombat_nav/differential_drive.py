@@ -6,8 +6,8 @@ from geometry_msgs.msg import Twist
 
 CHASSIS_VEL_TOPIC = "chassis_vel"
 
-LEFT_WHEEL_SPEED_TOPIC = "left_wheel_speed_radps"
-RIGHT_WHEEL_SPEED_TOPIC = "right_wheel_speed_radps"
+LEFT_WHEEL_SPEED_TOPIC = "cmd_left_wheel_vel_radps"
+RIGHT_WHEEL_SPEED_TOPIC = "cmd_right_wheel_vel_radps"
 
 CHASSIS_WIDTH_M = 0.4508
 
