@@ -10,6 +10,7 @@ LEFT_WHEEL_SPEED_TOPIC = "cmd_left_wheel_vel_radps"
 RIGHT_WHEEL_SPEED_TOPIC = "cmd_right_wheel_vel_radps"
 
 CHASSIS_WIDTH_M = 0.4508
+WHEEL_RADIUS_M = 0.245/2
 
 
 class DifferentialDrive(Node):
@@ -34,8 +35,8 @@ class DifferentialDrive(Node):
         chassis_speed = msg.linear.x
         chassis_ang_vel = msg.angular.z
 
-        right_wheel_speed_radps = chassis_speed + CHASSIS_WIDTH_M * chassis_ang_vel / 2
-        left_wheel_speed_radps = chassis_speed - CHASSIS_WIDTH_M * chassis_ang_vel / 2
+        right_wheel_speed_radps = 1/WHEEL_RADIUS_M*(chassis_speed + CHASSIS_WIDTH_M * chassis_ang_vel / 2)
+        left_wheel_speed_radps = 1/WHEEL_RADIUS_M*(chassis_speed - CHASSIS_WIDTH_M * chassis_ang_vel / 2)
 
         self.left_wheel_speed_publisher.publish(Float32(data=left_wheel_speed_radps))
         self.right_wheel_speed_publisher.publish(Float32(data=right_wheel_speed_radps))
