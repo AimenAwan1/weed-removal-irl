@@ -98,12 +98,10 @@ def generate_launch_description():
                 remappings=vod_remappings,
                 arguments=["-d"],
             ),
-            # Node(
-            #     package="rtabmap_viz",
-            #     executable="rtabmap_viz",
-            #     output="screen",
-            #     parameters=vod_parameters,
-            #     remappings=vod_remappings,
-            # ),
+            # for displaying the current estimated position of the robot frame
+            Node(
+                package="wombat_nav",
+                executable="odom_listener"
+            )
         ]
     )

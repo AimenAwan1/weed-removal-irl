@@ -28,6 +28,7 @@ setup(
             'object_centering = wombat_nav.object_centering:main',
             'vision_detection = wombat_nav.vision_detection:main',
             'fake_odometry = wombat_nav.fake_odometry:main',
+            'odom_listener = wombat_nav.odom_listener:main',
         ],
     },
 )
