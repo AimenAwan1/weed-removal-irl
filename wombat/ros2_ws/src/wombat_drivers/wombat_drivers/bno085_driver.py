@@ -42,7 +42,7 @@ class BNO085Driver(Node):
             msg = Imu()
 
             linear_accel = self.bno.linear_acceleration
-            self.get_logger().info(f"linear accel: {linear_accel}")
+            # self.get_logger().info(f"linear accel: {linear_accel}")
             if linear_accel is not None:
                 msg.linear_acceleration.x = linear_accel[0]
                 msg.linear_acceleration.y = linear_accel[1]
@@ -51,7 +51,7 @@ class BNO085Driver(Node):
                 raise
 
             angular_vel = self.bno.gyro
-            self.get_logger().info(f"angular vel: {angular_vel}")
+            # self.get_logger().info(f"angular vel: {angular_vel}")
             if angular_vel is not None:
                 msg.angular_velocity.x = angular_vel[0]
                 msg.angular_velocity.y = angular_vel[1]
@@ -60,7 +60,7 @@ class BNO085Driver(Node):
                 raise
 
             orient = self.bno.quaternion
-            self.get_logger().info(f"orientation: {orient}")
+            # self.get_logger().info(f"orientation: {orient}")
             if orient is not None:
                 msg.orientation.x = orient[0]
                 msg.orientation.y = orient[1]

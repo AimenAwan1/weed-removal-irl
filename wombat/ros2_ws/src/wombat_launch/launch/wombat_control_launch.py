@@ -41,28 +41,6 @@ def generate_launch_description():
                 package="wombat_drivers",
                 executable="bno085_driver_node",
             ),
-            Node(  # describes the transformation from the base_link to camera_link
-                package="tf2_ros",
-                executable="static_transform_publisher",
-                arguments=[
-                    "--x",
-                    "0.30",
-                    "--y",
-                    "0",
-                    "--z",
-                    "0.235",
-                    "--roll",
-                    "-1.919862177193763",
-                    "--pitch",
-                    "0",
-                    "--yaw",
-                    "-1.570796326794897",
-                    "--frame-id",
-                    "base_link",
-                    "--child-frame-id",
-                    "camera_link",
-                ],
-            ),
             # visual odometry and mapping (taken primarily from the example
             # of using the real sense camera)
             IncludeLaunchDescription(
@@ -99,6 +77,38 @@ def generate_launch_description():
                 arguments=["-d"],
             ),
             # for displaying the current estimated position of the robot frame
+            Node(  # describes the transformation from the base_link to camera_link
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                arguments=[
+                    "--x",
+                    "-0.362282519917305",
+                    "--z",
+                    "-0.118221722886988",
+                    "--pitch",
+                    "-0.349065850398866",
+                    "--frame-id",
+                    "odom",
+                    "--child-frame-id",
+                    "base_link_odom",
+                ],
+            ),
+            Node(  # describes the transformation from the base_link to camera_link
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                arguments=[
+                    "--x",
+                    "-0.362282519917305",
+                    "--z",
+                    "-0.118221722886988",
+                    "--pitch",
+                    "-0.349065850398866",
+                    "--frame-id",
+                    "camera_link",
+                    "--child-frame-id",
+                    "base_link",
+                ],
+            ),
             Node(
                 package="wombat_nav",
                 executable="odom_listener"

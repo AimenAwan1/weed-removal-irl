@@ -89,7 +89,7 @@ class STM32MotorDriver(Node):
             STM32_I2C_ADDR,
             CmdId.CMD_READ_ENCODERS.value,
             4*4) # 4 float32
-        self.get_logger().info(str(data))
+        # self.get_logger().info(str(data))
         msg = EstWheelsVel()
         (msg.left_wheel_vel,
          msg.left_wheel_var,

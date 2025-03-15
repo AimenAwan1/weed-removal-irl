@@ -5,8 +5,10 @@ from tf2_ros.transform_listener import TransformListener
 
 from scipy.spatial.transform import Rotation
 
-TRANSFORM_DISPLAY_HZ = 2
+TRANSFORM_DISPLAY_HZ = 10
 
+ODOMETRY_FRAME_ID = "base_link_odom"
+BASE_LINK_FRAME_ID = "base_link"
 
 class OdomListener(Node):
     def __init__(self):
@@ -17,24 +19,27 @@ class OdomListener(Node):
         self.timer = self.create_timer(1.0 / TRANSFORM_DISPLAY_HZ, self.timer_callback)
 
     def timer_callback(self):
-        t = self.tf_buffer.lookup_transform("odom", "base_link", rclpy.time.Time())
+        try:
+            t = self.tf_buffer.lookup_transform(ODOMETRY_FRAME_ID, BASE_LINK_FRAME_ID, rclpy.time.Time())
 
-        x = t.transform.translation.x
-        y = t.transform.translation.y
-        z = t.transform.translation.z
+            x = t.transform.translation.x
+            y = t.transform.translation.y
+            z = t.transform.translation.z
 
-        th = Rotation.from_quat(
-            [
-                t.transform.rotation.x,
-                t.transform.rotation.y,
-                t.transform.rotation.z,
-                t.transform.rotation.w,
-            ]
-        ).as_euler("xyz", degrees=True)[2]
+            th = Rotation.from_quat(
+                [
+                    t.transform.rotation.x,
+                    t.transform.rotation.y,
+                    t.transform.rotation.z,
+                    t.transform.rotation.w,
+                ]
+            ).as_euler("xyz", degrees=True)[2]
 
-        self.get_logger().info(
-            f"SLAM location of wombat: x={x}, y={y}, z={z}, th={th}deg"
-        )
+            self.get_logger().info(
+                f"SLAM location of wombat: x={x}, y={y}, z={z}, th={th}deg"
+            )
+        except:
+            self.get_logger().error(f"Frames '{ODOMETRY_FRAME_ID}' and '{BASE_LINK_FRAME_ID}' do not exist")
 
 
 def main(args=None):
