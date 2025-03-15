@@ -13,8 +13,8 @@ class ObjectCentering(Node):
         self.cmd_vel_left_pub = self.create_publisher(Float32,'cmd_left_wheel_vel_radps',10)
         self.cmd_vel_right_pub = self.create_publisher(Float32,'cmd_right_wheel_vel_radps',10)
         
-        self.create_subscription(Float64MultiArray, 'detected_objects', self.detection_callback, 10)
-        self.odom_subscription = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
+        self.create_subscription(Float64MultiArray, '/detected_objects', self.detection_callback, 10)
+        self.subscription = self.create_subscription(Odometry, '/robot_position', self.robot_position_callback, 10)
         
         self.kp_angular = 0.05
         self.kp_linear = 0.1
@@ -59,7 +59,7 @@ class ObjectCentering(Node):
         else:
             angular_velocity = self.kp_angular * angle_error
 
-        linear_velocity = 0.1 if closest_distance > 0.1 else 0.0
+        linear_velocity = 0.1 if closest_distance > 0.75 else 0.0
 
         left_wheel_velocity = linear_velocity/self.wheel_radius-angular_velocity*self.wheel_separation/(2*self.wheel_radius)
         right_wheel_velocity = linear_velocity/self.wheel_radius+angular_velocity*self.wheel_separation/(2*self.wheel_radius) 
@@ -72,8 +72,8 @@ class ObjectCentering(Node):
     
     def has_moved(self):
         current_position = self.get_robot_position()
-        dx = current_position[0] - self.last_position[0]
-        dy = current_position[1] - self.last_position[1]
+        dx = current_position.x - self.last_position.x
+        dy = current_position.y - self.last_position.y
         distance_moved = math.sqrt(dx**2 + dy**2)
         return distance_moved > 0.1
 
@@ -82,7 +82,7 @@ class ObjectCentering(Node):
             return (0.0, 0.0)
         return (self.current_position.x, self.current_position.y)
     
-    def odom_callback(self, msg: Odometry):
+    def robot_position_callback(self, msg: Odometry):
         self.current_position = msg.pose.pose.position
 
     def stop_robot(self):

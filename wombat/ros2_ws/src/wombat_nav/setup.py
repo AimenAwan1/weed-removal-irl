@@ -29,6 +29,9 @@ setup(
             'vision_detection = wombat_nav.vision_detection:main',
             'fake_odometry = wombat_nav.fake_odometry:main',
             'odom_listener = wombat_nav.odom_listener:main',
+            'main_waypoint_publisher = wombat_nav.main_waypoint_publisher:main',
+            'branch_waypoint_publisher = wombat_nav.branch_waypoint_publisher:main',
+            'inverse_kinematics_controller = wombat_nav.inverse_kinematics_controller:main',
         ],
     },
 )

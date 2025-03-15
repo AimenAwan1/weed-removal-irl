@@ -2,20 +2,19 @@ import os
 import yaml
 import rclpy
 from rclpy.node import Node
-import subprocess
 import math
-import time
+from time import time
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
-from std_msgs.msg import Float64MultiArray
+from scipy.spatial.transform import Rotation
 from ament_index_python.packages import get_package_share_directory
 
 class WaypointPublisher(Node):
     def __init__(self):
         super().__init__('waypoint_publisher')
 
-        self.subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        self.target_pub = self.create_publisher(Point, 'target_position', 10)
+        self.subscription = self.create_subscription(Odometry, '/robot_position', self.robot_position_callback, 10)
+        self.target_pub = self.create_publisher(Point, '/target_position', 10)
         
         #current robot position
         self.robot_x = 0.0
@@ -28,6 +27,8 @@ class WaypointPublisher(Node):
         self.current_main_index = 0
 
         self.waypoint_threshold = 0.1
+
+        self.last_time_reached = time()
         self.create_timer(1.0, self.timer_callback)
 
     def load_waypoints(self):
@@ -41,15 +42,20 @@ class WaypointPublisher(Node):
             self.get_logger().error(f"Failed to load waypoints: {e}")
             return []
 
-    def odom_callback(self, msg):
+    def robot_position_callback(self, msg):
         self.robot_x = msg.pose.pose.position.x
         self.robot_y = msg.pose.pose.position.y
         
         #euler from quaternion
         q = msg.pose.pose.orientation
-        siny_cosp = 2 * (q.w * q.z + q.x *q.y)
-        cosy_cosp = 1 -2 * (q.y * q.y + q.z * q.z)
-        self.robot_theta = math.atan2(siny_cosp, cosy_cosp)
+        self.robot_theta = Rotation.from_quat(
+                [
+                    q.x,
+                    q.y,
+                    q.z,
+                    q.w,
+                ]
+            ).as_euler("xyz", degrees=True)[2]
 
     def timer_callback(self):
         if self.current_main_index >= len(self.main_waypoints):
@@ -59,14 +65,15 @@ class WaypointPublisher(Node):
         target = self.main_waypoints[self.current_main_index]
         
         if self.is_target_reached(target):
-            self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")
-            time.sleep(10)
-            self.current_main_index += 1
+            current_time = time()
+            if current_time - self.last_time_reached >= 10: 
+                self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")
+                self.current_main_index += 1
 
-            if self.current_main_index < len(self.main_waypoints):
-                self.publish_target(self.main_waypoints[self.current_main_index])
-            else:
-                self.get_logger().info("Finished navigating main waypoints")
+                if self.current_main_index < len(self.main_waypoints):
+                    self.publish_target(self.main_waypoints[self.current_main_index])
+                else:
+                    self.get_logger().info("Finished navigating main waypoints")
 
         else:
             self.publish_target(target)

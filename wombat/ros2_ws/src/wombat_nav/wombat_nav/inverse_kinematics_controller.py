@@ -20,8 +20,8 @@ class InverseKinematicsController(Node):
         super().__init__('inverse_kinematics_controller')
         self.left_wheel_speed_publisher = self.create_publisher(Float32, "cmd_left_wheel_vel_radps", 10)
         self.right_wheel_speed_publisher = self.create_publisher(Float32, "cmd_right_wheel_vel_radps", 10)
-        self.cmd_vel_subscription = self.create_subscription(Point,'target_position',self.target_callback,10)
-        self.odom_subscription = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
+        self.cmd_vel_subscription = self.create_subscription(Point,'/target_position',self.target_callback,10)
+        self.odom_subscription = self.create_subscription(Odometry, '/robot_position', self.odom_callback, 10)
         self.cmd_vel = Twist()
         
         self.wheel_separation = 0.5348 

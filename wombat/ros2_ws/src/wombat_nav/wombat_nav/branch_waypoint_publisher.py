@@ -130,8 +130,6 @@ class WaypointPublisher(Node):
             if self.is_target_reached(target):
                 self.get_logger().info(f"Reached branch waypoint {self.current_branch_index}: {target}")
                 
-                self.call_object_centering_script()
-                
                 self.current_branch_index += 1
                 if self.current_branch_index < len(self.branch_waypoints):
                     self.publish_target(self.branch_waypoints[self.current_branch_index])
@@ -146,15 +144,6 @@ class WaypointPublisher(Node):
             else: 
                 self.publish_target(target)
     
-    def call_object_centering_script(self):
-        try:
-            self.get_logger().info("Calling object centering script...")
-            subprocess.run(['ros2', 'run', 'wombat_nav', 'object_centering'], check=True)
-        except subprocess.CalledProcessError as e:
-            self.get_logger().error(f"Error calling object centering script: {e}")
-        except Exception as e:
-            self.get_logger().error(f"Unexpected error: {e}")
-
     def is_target_reached(self, target):
         tx, ty = target
         distance = math.sqrt((tx - self.robot_x) ** 2 + (ty - self.robot_y) ** 2)
