@@ -31,11 +31,11 @@ class InverseKinematicsController(Node):
         self.target_position = None
         self.current_position = Point()
 
-        self.kp_linear = 3.0
-        self.ki_linear = 0.005
+        self.kp_linear = 5.0
+        self.ki_linear = 0.05
         self.kd_linear = 0.001
-        self.kp_angular = 4.0 #5.0
-        self.ki_angular = 0.01 #1.1234
+        self.kp_angular = 5.0 #5.0
+        self.ki_angular = 0.1 #1.1234
         self.kd_angular = 0.01 #0.1
 
         self.prev_error_linear = 0.0

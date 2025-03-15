@@ -3,7 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -43,6 +43,7 @@ def generate_launch_description():
             ),
             # visual odometry and mapping (taken primarily from the example
             # of using the real sense camera)
+            SetParameter(name='depth_module.emitter_enabled', value=0),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     [
