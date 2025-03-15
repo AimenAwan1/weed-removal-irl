@@ -121,11 +121,6 @@ def generate_launch_description():
             ),
             Node(
                 package="wombat_nav",
-                executable="vision_detection",
-                name="vision_detection"
-            ),
-            Node(
-                package="wombat_nav",
                 executable="branch_waypoint_publisher",
                 name="main_waypoint_publisher"
             )

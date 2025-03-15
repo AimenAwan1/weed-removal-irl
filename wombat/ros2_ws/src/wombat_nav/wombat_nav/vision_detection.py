@@ -8,6 +8,7 @@ import cv2 as cv
 import math
 import pyrealsense2 as rs
 from collections import deque
+from std_srvs.srv import Trigger
 
 # BRG color values
 #yellow
@@ -20,7 +21,7 @@ LOWER_MATCH_COLOR = np.array([10, 140, 140])
 
 def merge_rectangles(rects, threshold=30.0):
     merged = []
-    rects = deque(rects)  # Use deque for efficient popping from the front
+    rects = deque(rects)  
 
     while rects:
         x, y, w, h = rects.popleft()
@@ -40,7 +41,7 @@ def merge_rectangles(rects, threshold=30.0):
                     max(merged_rect[2], other_rect[2]),
                     max(merged_rect[3], other_rect[3])
                 )
-                rects.remove(rects[i])  # More efficient than pop(i), avoids shifting elements
+                rects.remove(rects[i]) 
             else:
                 i += 1  # Only increment if not merging
 
@@ -52,16 +53,16 @@ def merge_rectangles(rects, threshold=30.0):
 class VisionNode(Node):
     def __init__(self):
         super().__init__('vision_detection')
-        self.publisher = self.create_publisher(Float64MultiArray, 'detected_objects', 10)
-        self.timer = self.create_timer(0.1, self.timer_callback)
-
+        self.service = self.create_service(Trigger, 'detect_objects', self.detect_callback)
+        self.publisher = self.create_publisher(Float64MultiArray, '/detected_objects', 10)
+        
         self.pipeline = rs.pipeline()
         config = rs.config()
         config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
         self.pipeline.start(config)
         
-    def timer_callback(self):
+    def detect_callback(self):
         frame = self.pipeline.wait_for_frames()
         depth = frame.get_depth_frame()
         colour = frame.get_color_frame()

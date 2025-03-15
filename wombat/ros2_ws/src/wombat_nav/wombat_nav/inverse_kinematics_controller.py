@@ -105,15 +105,15 @@ class InverseKinematicsController(Node):
         self.left_wheel_speed_publisher.publish(Float32(data=cmd.data[0]))
         self.right_wheel_speed_publisher.publish(Float32(data=cmd.data[1]))
 
-        self.get_logger().info(f'Linear position error: {error_linear}')
-        self.get_logger().info(f'Angular position error: {error_angular}')
+        #self.get_logger().info(f'Linear position error: {error_linear}')
+        #self.get_logger().info(f'Angular position error: {error_angular}')
 
     def inverse_kinematics(self,v,w):
         left_wheel_velocity = v/self.wheel_radius-w*self.wheel_separation/(2*self.wheel_radius)
         right_wheel_velocity = v/self.wheel_radius+w*self.wheel_separation/(2*self.wheel_radius) 
 
-        self.get_logger().info(f'Linear Velocity: {v}, Angular Velocity: {w}')
-        self.get_logger().info(f'Left Wheel Velocity: {left_wheel_velocity}, Right Wheel Velocity: {right_wheel_velocity}')
+        #self.get_logger().info(f'Linear Velocity: {v}, Angular Velocity: {w}')
+        #self.get_logger().info(f'Left Wheel Velocity: {left_wheel_velocity}, Right Wheel Velocity: {right_wheel_velocity}')
                
         return [left_wheel_velocity,right_wheel_velocity]
 

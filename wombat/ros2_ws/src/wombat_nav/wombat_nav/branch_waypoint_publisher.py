@@ -2,12 +2,12 @@ import os
 import yaml
 import rclpy
 from rclpy.node import Node
-import subprocess
 import math
 import time
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float64MultiArray
+from std_srvs.srv import Trigger
 
 from scipy.spatial.transform import Rotation
 from ament_index_python.packages import get_package_share_directory
@@ -18,7 +18,11 @@ class WaypointPublisher(Node):
 
         self.subscription = self.create_subscription(Odometry, '/robot_position', self.robot_position_callback, 10)
         self.target_pub = self.create_publisher(Point, '/target_position', 10)
+        self.client = self.create_client(Trigger, 'detect_objects')
         self.create_subscription(Float64MultiArray, '/detected_objects', self.detection_callback, 10)
+
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn("Waiting for vision service...")
         
         #current robot position
         self.robot_x = 0.0
@@ -65,6 +69,23 @@ class WaypointPublisher(Node):
                 ]
             ).as_euler("xyz", degrees=True)[2]
 
+    def request_object_detection(self):
+        self.get_logger().info("requesting object detection")
+        request = Trigger.Request()
+        future = self.client.call_async(request)
+        future.add_done_callback(self.object_detection_callback)
+
+    def object_detection_callback(self, future):
+        try:
+            response = future.result()
+            if response.success:
+                self.get_logger().info(f"Vision service responded: {response.message}")
+            else:
+                self.get_logger().warn("Vision service failed.")
+        except Exception as e:
+            self.get_logger().error(f"Service call failed: {e}")
+            self.state = "MOVE_MAIN"
+
     def detection_callback(self, msg: Float64MultiArray):
         if self.state == "DETECT":
             branch_points = []
@@ -91,6 +112,7 @@ class WaypointPublisher(Node):
                 self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")
                 self.state = "DETECT"
                 self.detection_start_time = self.get_clock().now()
+                self.request_object_detection()
             else:
                 self.publish_target(target)
 
