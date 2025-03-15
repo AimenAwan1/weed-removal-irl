@@ -100,9 +100,9 @@ class STM32MotorDriver(Node):
 
     def cmd_timeout_check_callback(self):
         curr_time = time.time()
-        if (self.left_wheel_vel_cmd.check_time_out(curr_time) or
-                self.right_wheel_vel_cmd.check_time_out(curr_time)):
-            self.send_wheel_vel_cmd()
+        # if (self.left_wheel_vel_cmd.check_time_out(curr_time) or
+        #         self.right_wheel_vel_cmd.check_time_out(curr_time)):
+        #     self.send_wheel_vel_cmd()
 
     def cmd_left_wheel_vel_callback(self, msg: Float32):
         self.left_wheel_vel_cmd = WheelVelCmd(time.time(), msg.data)

@@ -33,10 +33,10 @@ def generate_launch_description():
                 package="wombat_drivers",
                 executable="stm32_motor_driver_node",
             ),
-            Node(
-                package="wombat_nav",
-                executable="differential_drive_node",
-            ),
+            # Node(
+            #     package="wombat_nav",
+            #     executable="differential_drive_node",
+            # ),
             Node(
                 package="wombat_drivers",
                 executable="bno085_driver_node",

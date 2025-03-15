@@ -31,10 +31,10 @@ class InverseKinematicsController(Node):
         self.target_position = None
         self.current_position = Point()
 
-        self.kp_linear = 0.5
+        self.kp_linear = 3.0
         self.ki_linear = 0.005
         self.kd_linear = 0.001
-        self.kp_angular = 1.0 #5.0
+        self.kp_angular = 4.0 #5.0
         self.ki_angular = 0.01 #1.1234
         self.kd_angular = 0.01 #0.1
 
@@ -104,6 +104,9 @@ class InverseKinematicsController(Node):
          
         self.left_wheel_speed_publisher.publish(Float32(data=cmd.data[0]))
         self.right_wheel_speed_publisher.publish(Float32(data=cmd.data[1]))
+
+        self.get_logger().info(f'Linear position error: {error_linear}')
+        self.get_logger().info(f'Angular position error: {error_angular}')
 
     def inverse_kinematics(self,v,w):
         left_wheel_velocity = v/self.wheel_radius-w*self.wheel_separation/(2*self.wheel_radius)
