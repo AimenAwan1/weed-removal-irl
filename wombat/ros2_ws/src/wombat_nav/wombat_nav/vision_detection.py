@@ -95,11 +95,13 @@ class VisionNode(Node):
             #if w < 30 or h < 30:
             #    continue
 
-            distance = depth_image[(y1 + y2)//2, (x1 + x2)//2]
-            angle = (((x1 + x2)// 2 - frame_center) / 640  * (86 * math.pi / 180))
+            distance_pitched = depth_image[(y1 + y2)//2, (x1 + x2)//2]
+            distance = distance_pitched / math.cos(0.439976)
+            angle = -(((x1 + x2)// 2 - frame_center) / 640  * (86 * math.pi / 180))
             
+            angle_deg = angle * 180 / math.pi
             self.get_logger().info(f"distance: {distance}")
-            self.get_logger().info(f"angle: {angle}")
+            self.get_logger().info(f"angle deg: {angle_deg}")
 
             detected_objects.append(float(distance))
             detected_objects.append(float(angle))
