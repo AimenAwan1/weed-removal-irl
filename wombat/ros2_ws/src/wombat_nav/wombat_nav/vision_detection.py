@@ -9,6 +9,8 @@ import math
 import pyrealsense2 as rs
 from collections import deque
 from wombat_msgs.srv import DetectObjects
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image
 
 # BRG color values
 #yellow
@@ -60,16 +62,38 @@ class VisionNode(Node):
         super().__init__('vision_detection')
         self.service = self.create_service(DetectObjects, 'detect_objects', self.detect_callback)
         
-        self.pipeline = rs.pipeline()
-        config = rs.config()
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        self.pipeline.start(config)
-        
+        self.image_colour_sub = self.create_subscription(Image, '/camera/camera/color/image_raw', self.colour_callback, 10)
+        self.image_depth_sub = self.create_subscription(Image, '/camera/depth/image_rect_raw', self.depth_callback, 10)
+
+        self.bridge = CvBridge()
+
+        self.cv_image_colour = None
+        self.cv_image_depth = None
+
+        #self.pipeline = rs.pipeline()
+        #config = rs.config()
+        #config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+        #config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        #self.pipeline.start(config)
+
+    def colour_callback(self, data):
+        try:
+            self.cv_image_colour = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+
+    def depth_callback(self, data):
+        try:
+            self.cv_image_depth = self.bridge.imgmsg_to_cv2(data, "z16")
+        except CvBridgeError as e:
+            print(e)
+       
     def detect_callback(self, request, response):
-        frame = self.pipeline.wait_for_frames()
-        depth = frame.get_depth_frame()
-        colour = frame.get_color_frame()
+        #frame = self.pipeline.wait_for_frames()
+        #depth = frame.get_depth_frame()
+        #colour = frame.get_color_frame()
+        depth = self.cv_image_depth
+        colour = self.cv_image_colour
 
         if not depth or not colour:
             self.get_logger().error('Failed to capture frame')
@@ -132,21 +156,6 @@ def main(args=None):
 
     node.destroy_node()
     rclpy.shutdown()
-    
-    #try:
-    #    while rclpy.ok(): # while the node isn't shut down
-    #        rclpy.spin(node)
-    #except KeyboardInterrupt:
-    #    node.get_logger().info('Node has stopped cleanly.')
-    #except SystemExit:
-    #    node.get_logger().info('Node is complete.')
-    #except BaseException as exc:
-    #    type = exc.__class__.__name__
-    #    node.get_logger().error(f'{type} exception in node has occured.')
-    #    raise # raise without argument = raise the last exception
-    #finally:
-    #    node.destroy()
-    #    rclpy.shutdown() 
-
+  
 if __name__ == "__main__":
     main()
