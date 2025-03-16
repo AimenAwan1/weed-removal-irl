@@ -9,6 +9,7 @@ import math
 import pyrealsense2 as rs
 from collections import deque
 from std_srvs.srv import Trigger
+from wombat_srv import DetectObjects
 
 # BRG color values
 #yellow
@@ -49,12 +50,10 @@ def merge_rectangles(rects, threshold=30.0):
     
     return merged
 
-
 class VisionNode(Node):
     def __init__(self):
         super().__init__('vision_detection')
         self.service = self.create_service(Trigger, 'detect_objects', self.detect_callback)
-        self.publisher = self.create_publisher(Float64MultiArray, '/detected_objects', 10)
         
         self.pipeline = rs.pipeline()
         config = rs.config()
@@ -62,14 +61,14 @@ class VisionNode(Node):
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
         self.pipeline.start(config)
         
-    def detect_callback(self):
+    def detect_callback(self, response):
         frame = self.pipeline.wait_for_frames()
         depth = frame.get_depth_frame()
         colour = frame.get_color_frame()
 
         if not depth or not colour:
             self.get_logger().error('Failed to capture frame')
-            return
+            return 
         
         self.get_logger().info('Reading camera frame')
 
@@ -103,9 +102,8 @@ class VisionNode(Node):
             rect_img = cv.rectangle(rect_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv.putText(rect_img, f"{distance:.2f} m", (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-        msg = Float64MultiArray()
-        msg.data = detected_objects
-        self.publisher.publish(msg)
+        ######################
+        response.detections = detected_objects
         self.get_logger().info('Published data')
 
         cv.imshow('Mask', mask)

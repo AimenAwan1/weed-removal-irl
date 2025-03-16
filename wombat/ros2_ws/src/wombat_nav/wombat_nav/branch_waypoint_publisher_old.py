@@ -1,3 +1,4 @@
+#supposed to do everything (does'nt work)
 import os
 import yaml
 import rclpy

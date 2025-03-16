@@ -1,4 +1,4 @@
-#move to hardcoded main waypoints
+#move to main waypoint and trigger camera node
 import os
 import yaml
 import rclpy
@@ -9,10 +9,11 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
 from scipy.spatial.transform import Rotation
 from ament_index_python.packages import get_package_share_directory
+from std_srvs.srv import Trigger
 
-class WaypointPublisher(Node):
+class WaypointPublisherTestOne(Node):
     def __init__(self):
-        super().__init__('waypoint_publisher')
+        super().__init__('waypoint_publisher_test_one')
 
         self.subscription = self.create_subscription(Odometry, '/robot_position', self.robot_position_callback, 10)
         self.target_pub = self.create_publisher(Point, '/target_position', 10)
@@ -28,8 +29,9 @@ class WaypointPublisher(Node):
         self.current_main_index = 0
 
         self.waypoint_threshold = 0.1
+        self.waiting_for_detection = False
+        self.last_published_target = None
 
-        self.last_time_reached = time()
         self.create_timer(1.0, self.timer_callback)
 
     def load_waypoints(self):
@@ -65,17 +67,10 @@ class WaypointPublisher(Node):
             
         target = self.main_waypoints[self.current_main_index]
         
-        if self.is_target_reached(target):
-            current_time = time()
-            if current_time - self.last_time_reached >= 10: 
-                self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")
-                self.current_main_index += 1
-
-                if self.current_main_index < len(self.main_waypoints):
-                    self.publish_target(self.main_waypoints[self.current_main_index])
-                else:
-                    self.get_logger().info("Finished navigating main waypoints")
-
+        #if main waypoint reached, trigger object detection, else keep sending target
+        if self.is_target_reached(target) and not self.waiting_for_detection:
+            self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")  
+            self.trigger_object_detection()
         else:
             self.publish_target(target)
 
@@ -90,11 +85,41 @@ class WaypointPublisher(Node):
         point.y = target[1]
         self.target_pub.publish(point)
         self.get_logger().info(f"Publishing target: ({point.x}, {point.y})")
+
+    def trigger_object_detection(self):
+        client = self.create_client(Trigger, 'detect_objects')
+        if not client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().error('Object detection service is not available')
+            return
+        
+        request = Trigger.Request()
+        future = client.call_async(request)
+        future.add_done_callback(self.detection_response_callback)
+
+        self.waiting_for_detection = True
+
+    def detection_response_callback(self, future):
+        try: 
+            response = future.result()
+            if response.success:
+                self.get_logger().info("Object detection completed successfully")
+            else:
+                self.get_logger().warn("Object detection service call failed")
+        except Exception as e:
+            self.get_logger().error(f"Service call failed: {e}")
+
+        self.waiting_for_detection = False
+        self.current_main_index +=1
+        
+        if self.current_main_index < len(self.main_waypoints):
+            self.publish_target(self.main_waypoints[self.current_main_index])
+        else:
+            self.get_logger().info("Finished navigating main waypoints")
     
 def main(args=None):
     rclpy.init(args=args)
     
-    node = WaypointPublisher()
+    node = WaypointPublisherTestOne()
     try:
         while rclpy.ok(): # while the node isn't shut down
             rclpy.spin_once(node)

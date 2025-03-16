@@ -32,6 +32,8 @@ setup(
             'main_waypoint_publisher = wombat_nav.main_waypoint_publisher:main',
             'branch_waypoint_publisher = wombat_nav.branch_waypoint_publisher:main',
             'inverse_kinematics_controller = wombat_nav.inverse_kinematics_controller:main',
+            'waypoint_publisher_test_one = wombat_nav.test1_waypoints:main',
+            'waypoint_publisher_test_two = wombat_nav.test2_waypoints:main',
         ],
     },
 )
