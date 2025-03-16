@@ -126,8 +126,8 @@ def generate_launch_description():
             ),
             Node(
                 package="wombat_nav",
-                executable="branch_waypoint_publisher",
-                name="main_waypoint_publisher"
+                executable="test2_waypoints",
+                name="test2_waypoints"
             )
             
         ]

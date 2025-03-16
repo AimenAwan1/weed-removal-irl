@@ -32,10 +32,10 @@ class InverseKinematicsController(Node):
         self.current_position = Point()
 
         self.kp_linear = 5.0
-        self.ki_linear = 0.05
+        self.ki_linear = 0.1
         self.kd_linear = 0.001
         self.kp_angular = 5.0 #5.0
-        self.ki_angular = 0.1 #1.1234
+        self.ki_angular = 0.2 #1.1234
         self.kd_angular = 0.01 #0.1
 
         self.prev_error_linear = 0.0
@@ -91,7 +91,7 @@ class InverseKinematicsController(Node):
                            + self.ki_angular * self.integral_angular 
                            + self.kd_angular * derivative_angular)
         
-        if distance < 0.1:
+        if distance < 0.05:
             linear_velocity = 0.0
             angular_velocity = 0.0
             self.get_logger().info('Target reached, stopped the robot')

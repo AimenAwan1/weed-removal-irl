@@ -78,7 +78,7 @@ class WaypointPublisherTestTwo(Node):
         #if not more waypoints, return
         if self.current_main_index >= len(self.main_waypoints):
             self.get_logger().info('All main waypoints reached.')
-            return
+            rclpy.shutdown()
             
         target = self.main_waypoints[self.current_main_index]
         
@@ -97,7 +97,7 @@ class WaypointPublisherTestTwo(Node):
     def trigger_object_detection(self):
         self.branch_waypoints = []  # do this so its empty if it fails
 
-        if not self.client.wait_for_service(timeout_sec=5.0):
+        if not self.client.wait_for_service(timeout_sec=30.0):
             self.get_logger().error('Object detection service is not available')
             return
         
@@ -122,6 +122,7 @@ class WaypointPublisherTestTwo(Node):
 
             new_x = self.robot_x + distance * math.cos(math.radians(self.robot_theta + angle))
             new_y = self.robot_y + distance * math.sin(math.radians(self.robot_theta + angle))
+            self.get_logger().info("calculated branch way points: {new_x}, {new_y}")
             self.branch_waypoints.append((new_x, new_y))
 
         self.is_following_branch_waypoint = True
@@ -135,10 +136,12 @@ class WaypointPublisherTestTwo(Node):
             
             if self.is_target_reached(self.branch_waypoints[self.current_branch_index]):
                 current_branch_index += 1
+                self.get_logger().info('incremented branch waypoint')
 
         else:
             self.get_logger().info(f"Finished branch waypoints for main waypoint {self.current_main_index}")
             self.current_main_index += 1
+            self.get_logger().info('incremented main waypoint')
             self.is_following_branch_waypoint = False  # indicates that we have finished the branch waypoints 
             
             if self.current_main_index < len(self.main_waypoints):
