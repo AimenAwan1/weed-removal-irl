@@ -8,7 +8,6 @@ import cv2 as cv
 import math
 import pyrealsense2 as rs
 from collections import deque
-from wombat_msgs.srv import DetectObjects
 
 # BRG color values
 #yellow
@@ -19,9 +18,9 @@ LOWER_MATCH_COLOR = np.array([110, 200, 160])
 #UPPER_MATCH_COLOR = np.array([250, 250, 250])
 
 
-def merge_rectangles(rects, threshold=50.0):
+def merge_rectangles(rects, threshold=30.0):
     merged = []
-    rects = deque(rects)  
+    rects = deque(rects)  # Use deque for efficient popping from the front
 
     while rects:
         x, y, w, h = rects.popleft()
@@ -32,12 +31,6 @@ def merge_rectangles(rects, threshold=50.0):
             x2, y2, w2, h2 = rects[i]
             other_rect = (x2, y2, x2 + w2, y2 + h2)
 
-            if (other_rect[0] >= merged_rect[0] and other_rect[1] >= merged_rect[1] and
-                      other_rect[2] <= merged_rect[2] and other_rect[3] <= merged_rect[3]):
-                
-                rects.remove(rects[i])
-                continue
-
             if (max(merged_rect[0], other_rect[0]) - min(merged_rect[2], other_rect[2]) <= threshold and
                 max(merged_rect[1], other_rect[1]) - min(merged_rect[3], other_rect[3]) <= threshold):
 
@@ -47,7 +40,7 @@ def merge_rectangles(rects, threshold=50.0):
                     max(merged_rect[2], other_rect[2]),
                     max(merged_rect[3], other_rect[3])
                 )
-                rects.remove(rects[i]) 
+                rects.remove(rects[i])  # More efficient than pop(i), avoids shifting elements
             else:
                 i += 1  # Only increment if not merging
 
@@ -55,25 +48,27 @@ def merge_rectangles(rects, threshold=50.0):
     
     return merged
 
+
 class VisionNode(Node):
     def __init__(self):
-        super().__init__('vision_detection')
-        self.service = self.create_service(DetectObjects, 'detect_objects', self.detect_callback)
-        
+        super().__init__('vision_detection_calibrate_color')
+        self.publisher = self.create_publisher(Float64MultiArray, 'detected_objects', 10)
+        self.timer = self.create_timer(0.1, self.timer_callback)
+
         self.pipeline = rs.pipeline()
         config = rs.config()
         config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
         self.pipeline.start(config)
         
-    def detect_callback(self, request, response):
+    def timer_callback(self):
         frame = self.pipeline.wait_for_frames()
         depth = frame.get_depth_frame()
         colour = frame.get_color_frame()
 
         if not depth or not colour:
             self.get_logger().error('Failed to capture frame')
-            return 
+            return
         
         self.get_logger().info('Reading camera frame')
 
@@ -107,15 +102,15 @@ class VisionNode(Node):
             rect_img = cv.rectangle(rect_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv.putText(rect_img, f"{distance:.2f} m", (x1, y1 - 10), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-        response.detections = Float64MultiArray(data=detected_objects)
+        msg = Float64MultiArray()
+        msg.data = detected_objects
+        self.publisher.publish(msg)
         self.get_logger().info('Published data')
 
         cv.imshow('Mask', mask)
         cv.imshow('Edges', edges)
         cv.imshow('Rect Img', rect_img)
         cv.waitKey(1)
-
-        return response
 
     def destroy(self):
         self.pipeline.stop()
@@ -125,26 +120,20 @@ class VisionNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = VisionNode()
-
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
-    
-    #try:
-    #    while rclpy.ok(): # while the node isn't shut down
-    #        rclpy.spin(node)
-    #except KeyboardInterrupt:
-    #    node.get_logger().info('Node has stopped cleanly.')
-    #except SystemExit:
-    #    node.get_logger().info('Node is complete.')
-    #except BaseException as exc:
-    #    type = exc.__class__.__name__
-    #    node.get_logger().error(f'{type} exception in node has occured.')
-    #    raise # raise without argument = raise the last exception
-    #finally:
-    #    node.destroy()
-    #    rclpy.shutdown() 
+    try:
+        while rclpy.ok(): # while the node isn't shut down
+            rclpy.spin_once(node)
+    except KeyboardInterrupt:
+        node.get_logger().info('Node has stopped cleanly.')
+    except SystemExit:
+        node.get_logger().info('Node is complete.')
+    except BaseException as exc:
+        type = exc.__class__.__name__
+        node.get_logger().error(f'{type} exception in node has occured.')
+        raise # raise without argument = raise the last exception
+    finally:
+        node.destroy()
+        rclpy.shutdown() 
 
 if __name__ == "__main__":
     main()

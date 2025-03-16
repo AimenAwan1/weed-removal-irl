@@ -8,7 +8,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
 from scipy.spatial.transform import Rotation
 from ament_index_python.packages import get_package_share_directory
-from wombat_srv import DetectObjects
+from wombat_msgs.srv import DetectObjects
 
 class WaypointPublisherTestTwo(Node):
     def __init__(self):
@@ -32,7 +32,7 @@ class WaypointPublisherTestTwo(Node):
         self.waypoint_threshold = 0.05
         self.branch_waypoints = []
 
-        self.processed_detection = False
+        self.is_following_branch_waypoint = False
 
         self.create_timer(1.0, self.timer_callback)
 
@@ -86,7 +86,7 @@ class WaypointPublisherTestTwo(Node):
         #if branch waypoint reached, go to next branch waypoint
         #else keep sending target
         if self.is_target_reached(target):
-            if not self.processed_detection:
+            if not self.is_following_branch_waypoint:
                 self.get_logger().info(f"reached main waypoint {self.current_main_index}: {target}")  
                 self.trigger_object_detection()
             else:
@@ -95,50 +95,51 @@ class WaypointPublisherTestTwo(Node):
             self.publish_target(target)
 
     def trigger_object_detection(self):
+        self.branch_waypoints = []  # do this so its empty if it fails
+
         if not self.client.wait_for_service(timeout_sec=5.0):
             self.get_logger().error('Object detection service is not available')
             return
         
-        request = DetectObjects.Request()
-        future = self.client.call(request)
-        future.add_done_callback(self.detection_response_callback)
-
-    def detection_response_callback(self, future):
-        try: 
-            response = future.result()
-            if response.success:
-                self.get_logger().info("Object detection completed successfully")
-            else:
-                self.get_logger().warn("Object detection service call failed")
+        try:
+            request = DetectObjects.Request()
+            response = self.client.call(request)
         except Exception as e:
             self.get_logger().error(f"Service call failed: {e}")
+            return
 
-        ######################
-        self.branch_waypoints = []
+        if response.success:
+            self.get_logger().info("Object detection completed successfully")
+        else:
+            self.get_logger().warn("Object detection failed")
+            return
+        
+        # service call returned successfully
 
         for i in range(0, len(response.data), 2):
             distance = response.data[i]
             angle = response.data[i+1]
-        ################
 
             new_x = self.robot_x + distance * math.cos(math.radians(self.robot_theta + angle))
             new_y = self.robot_y + distance * math.sin(math.radians(self.robot_theta + angle))
             self.branch_waypoints.append((new_x, new_y))
 
-        self.processed_detection = True
-        self.navigate_branch_waypoints()
+        self.is_following_branch_waypoint = True
+
+        self.current_branch_index = 0  # reset this index as there are new branch waypoints after detection
+        self.navigate_branch_waypoints()  # triggers following the first branch waypoint        
 
     def navigate_branch_waypoints(self):
         if self.current_branch_index < len(self.branch_waypoints):
             self.publish_target(self.branch_waypoints[self.current_branch_index])
             
             if self.is_target_reached(self.branch_waypoints[self.current_branch_index]):
-                current_branch_index +=1
+                current_branch_index += 1
 
         else:
             self.get_logger().info(f"Finished branch waypoints for main waypoint {self.current_main_index}")
             self.current_main_index += 1
-            self.processed_detection = False 
+            self.is_following_branch_waypoint = False  # indicates that we have finished the branch waypoints 
             
             if self.current_main_index < len(self.main_waypoints):
                 self.publish_target(self.main_waypoints[self.current_main_index])

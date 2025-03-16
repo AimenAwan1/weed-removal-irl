@@ -27,6 +27,7 @@ setup(
             'waypoint_publisher = wombat_nav.waypoint_publisher:main',
             'object_centering = wombat_nav.object_centering:main',
             'vision_detection = wombat_nav.vision_detection:main',
+            'vision_detection_calibrate_color = wombat_nav.vision_detection_calibrate_color:main',
             'fake_odometry = wombat_nav.fake_odometry:main',
             'odom_listener = wombat_nav.odom_listener:main',
             'main_waypoint_publisher = wombat_nav.main_waypoint_publisher:main',
