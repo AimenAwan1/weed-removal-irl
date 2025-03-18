@@ -1,0 +1,9 @@
+# Request
+geometry_msgs/Point target
+---
+# Result
+geometry_msgs/Point final
+geometry_msgs/Point error
+---
+# Feedback
+geometry_msgs/Point current

@@ -35,6 +35,7 @@ setup(
             'inverse_kinematics_controller = wombat_nav.inverse_kinematics_controller:main',
             'test1_waypoints = wombat_nav.test1_waypoints:main',
             'test2_waypoints = wombat_nav.test2_waypoints:main',
+            'waypoint_action_server = wombat_nav.waypoint_action_server:main'
         ],
     },
 )
