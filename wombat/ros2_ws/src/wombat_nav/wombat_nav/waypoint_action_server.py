@@ -24,14 +24,20 @@ ODOMETRY_TOPIC = "/robot_position"
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
 KP_LINEAR = 0.8
-KV_LINEAR = 0.0 # 0.001
-KI_LINEAR = 0.2 # 0.5/2
+KV_LINEAR = 0.0  # 0.001
+KI_LINEAR = 0.2  # 0.5/2
 
 KP_ANGULAR = 1.5
-KV_ANGULAR = 0.0 # 0.1/1
-KI_ANGULAR = 0.0 # 0.5/2
+KV_ANGULAR = 0.0  # 0.1/1
+KI_ANGULAR = 0.0  # 0.5/2
 
-CONTROL_LOOP_TIMER_HZ = 20
+CONTROL_LOOP_TIMER_HZ = 30
+
+INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/12# np.pi/6  # 30 degrees in alignment
+# once this close turn off angle controller (prevents jumping)
+DISTANCE_TILL_ANGLE_SHUTOFF_M = 0.2
+
+MAX_SPEED_LIN_MS = 0.25
 
 
 class WaypointActionServer(Node):
@@ -67,8 +73,7 @@ class WaypointActionServer(Node):
 
     def reset_error(self):
         self.error = np.array([0, 0])
-        # self.prev_error_ang = 0 # angle of the error vector
-        # self.is_start_ang = True # just a switch to not apply error angle checking on first run
+        self.aligned_with_direction = False
 
         self.prev_error_linear = 0
         self.prev_error_angular = 0
@@ -119,25 +124,29 @@ class WaypointActionServer(Node):
 
             # angular velocity
             current_error_angle = np.arctan2(
-                self.error[1], self.error[0])
-            # if not self.is_start_ang and np.abs(current_error_angle - self.prev_error_ang) > np.pi/2:
-            #     current_error_angle = self.prev_error_ang
-            self.prev_error_ang = current_error_angle
-            # self.is_start_ang = False
+                self.error[1],
+                self.error[0])
 
-            current_angle = self.current_ang
-            if current_error_angle > 2*np.pi/3 or current_error_angle < -2*np.pi/3:
-                current_error_angle = (current_error_angle + 2*np.pi) % (2*np.pi)
-                current_angle = (current_angle + 2*np.pi) % (2*np.pi)
+            if np.abs(current_error_angle) > 2*np.pi/3:
+                error_angular = (
+                    current_error_angle+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
+            else:
+                error_angular = current_error_angle - self.current_ang
+            error_angular = np.clip(
+                error_angular, a_min=-np.pi/4, a_max=np.pi/4)
 
-            error_angular = current_error_angle - current_angle
-            self.get_logger().info(f"err_ang={np.arctan2(self.error[1], self.error[0])}, current_ang={self.current_ang}")
-            self.get_logger().info(f"adjusted error angular: {error_angular}, current_error_angle: {current_error_angle}, current_angle: {current_angle}")
+            # if np.abs(error_angular) >= np.pi:
+            #      error_angular = -1*np.sign(error_angular)*(2*np.pi - np.abs(error_angular))
+
+            self.get_logger().info(
+                f"error_angular={error_angular}, current_error_angle={current_error_angle}, current_ang={self.current_ang}")
             self.integral_error_angular += error_angular * dt
-            self.get_logger().info(f"integral error: {self.integral_error_angular}")
+            self.get_logger().info(
+                f"integral error: {self.integral_error_angular}")
             deriv_error_angular = (
                 error_angular - self.prev_error_angular) / dt
-            self.get_logger().info(f"deriv_error_angular: {deriv_error_angular}")
+            self.get_logger().info(
+                f"deriv_error_angular: {deriv_error_angular}")
             self.prev_error_angular = error_angular
 
             w = (
@@ -145,7 +154,20 @@ class WaypointActionServer(Node):
                 + KV_ANGULAR * deriv_error_angular
                 + KI_ANGULAR * self.integral_error_angular
             )
-            w = w if error_linear > 0.2 else 0.0
+
+            # checks controller stages
+
+            # disable the linear controller until angle alignment with the target position is
+            # within an allowable distance (prevents situations where unpredictable behavior
+            # occurs due to a waypoint being behind the robot)
+            if np.abs(error_angular) < INITIAL_CONTROLLER_ALIGNMENT_RAD:
+                self.aligned_with_direction = True
+            v = v if self.aligned_with_direction else 0.0
+            v = np.clip(v, a_min=0, a_max=MAX_SPEED_LIN_MS)
+
+            # prevents jumping when a bit of overshoot results in the error vector inverting
+            # causing the robot to begin spinning around before shutting off as within allowances
+            w = w if error_linear > DISTANCE_TILL_ANGLE_SHUTOFF_M else 0.0
 
             self.get_logger().info("before chassis vel publish")
 
@@ -197,7 +219,7 @@ class WaypointActionServer(Node):
         result_msg = WaypointAction.Result()
         result_msg.final = self.current_position
         result_msg.error = Point(x=self.error[0], y=self.error[1])
-        
+
         return result_msg
 
 

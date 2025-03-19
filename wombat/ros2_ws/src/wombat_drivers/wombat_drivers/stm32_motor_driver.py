@@ -84,6 +84,11 @@ class STM32MotorDriver(Node):
             10
         )
 
+    def __del__(self):
+        self.left_wheel_vel_cmd = WheelVelCmd(0, 0)
+        self.right_wheel_vel_cmd = WheelVelCmd(0, 0)
+        self.send_wheel_vel_cmd()
+
     def check_curr_wheels_vels_callback(self):
         data = self.bus.read_i2c_block_data(
             STM32_I2C_ADDR,
