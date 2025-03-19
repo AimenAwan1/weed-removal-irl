@@ -17,15 +17,15 @@ from wombat_msgs.action import WaypointAction
 WAYPOINT_ACTION = "waypoint_action"
 WAYPOINT_ACTION_FEEDBACK_HZ = 2
 
-WAYPOINT_ERROR_DIST_THRESHOLD = 0.05
+WAYPOINT_ERROR_DIST_THRESHOLD = 0.03
 
 ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
-KP_LINEAR = 0.8
+KP_LINEAR = 1.0 # 0.8
 KV_LINEAR = 0.0  # 0.001
-KI_LINEAR = 0.2  # 0.5/2
+KI_LINEAR = 0.0  # 0.5/2
 
 KP_ANGULAR = 1.5
 KV_ANGULAR = 0.0  # 0.1/1
@@ -33,7 +33,7 @@ KI_ANGULAR = 0.0  # 0.5/2
 
 CONTROL_LOOP_TIMER_HZ = 30
 
-INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/12# np.pi/6  # 30 degrees in alignment
+INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/24 # np.pi/6  # 30 degrees in alignment
 # once this close turn off angle controller (prevents jumping)
 DISTANCE_TILL_ANGLE_SHUTOFF_M = 0.2
 
@@ -133,7 +133,7 @@ class WaypointActionServer(Node):
             else:
                 error_angular = current_error_angle - self.current_ang
             error_angular = np.clip(
-                error_angular, a_min=-np.pi/4, a_max=np.pi/4)
+                error_angular, a_min=-np.pi/6, a_max=np.pi/6)
 
             # if np.abs(error_angular) >= np.pi:
             #      error_angular = -1*np.sign(error_angular)*(2*np.pi - np.abs(error_angular))
