@@ -1,16 +1,20 @@
+import os
+import math
 import cv2 as cv
+from cv_bridge import CvBridge, CvBridgeError
+
+import numpy as np
+from ultralytics import YOLO
+
 import rclpy
 from rclpy.node import Node
-import time
-from ultralytics import YOLO
-import numpy as np
-from cv_bridge import CvBridge, CvBridgeError
 from wombat_msgs.srv import DetectObjects
-import math
 from std_msgs.msg import Float64MultiArray
-import os
 
-RECT_COLOR = (255,0,0)
+from ament_index_python.packages import get_package_share_directory
+
+
+RECT_COLOR = (255, 0, 0)
 RECT_THICKNESS = 2
 
 CONFIDENCE_THRESHOLD = 0.5
@@ -20,6 +24,7 @@ INTEL_REALSENSE_DEPTH_TOPIC = "/camera/camera/depth/image_rect_raw"
 DEPTH_SCALING_FACTOR_TO_M = 1e-3
 
 FRAME_CENTER = 320
+
 
 class YoloVisionNode(Node):
     def __init__(self):
@@ -34,8 +39,11 @@ class YoloVisionNode(Node):
         self.cv_image_colour = None
         self.cv_image_depth = None
 
-        file_path = os.path.expanduser("~/Documents/best.pt")
-        self.model = YOLO(model=file_path)
+        package_share_directory = get_package_share_directory("wombat_nav")
+        models_file = os.path.join(
+            package_share_directory, 'config', 'yolo_weights.pt')
+
+        self.model = YOLO(model=models_file)
 
         self.get_logger().info("Vision node initialized")
 
@@ -53,7 +61,8 @@ class YoloVisionNode(Node):
 
     def detect_callback(self, request, response):
 
-        results = self.model.predict(self.cv_image_colour, stream=True, verbose=False)
+        results = self.model.predict(
+            self.cv_image_colour, stream=True, verbose=False)
         for result in results:
             boxes = result.boxes
 
@@ -66,12 +75,13 @@ class YoloVisionNode(Node):
                 if confidences[i] < CONFIDENCE_THRESHOLD:
                     continue
 
-                x = int(xywh[i,0])
-                y = int(xywh[i,1])
-                w = int(xywh[i,2])
-                h = int(xywh[i,3])
+                x = int(xywh[i, 0])
+                y = int(xywh[i, 1])
+                w = int(xywh[i, 2])
+                h = int(xywh[i, 3])
 
-                distance_pitched = self.cv_image_depth[x, y] * DEPTH_SCALING_FACTOR_TO_M
+                distance_pitched = self.cv_image_depth[x,
+                                                       y] * DEPTH_SCALING_FACTOR_TO_M
                 distance = distance_pitched / math.cos(0.439976)
                 angle = -((x - FRAME_CENTER) / 640 * (86 * math.pi / 180))
 
@@ -83,17 +93,18 @@ class YoloVisionNode(Node):
                 detected_objects.append(float(angle))
 
                 frame = cv.rectangle(
-                    img=frame, 
-                    pt1=(x-w//2,y-h//2),
-                    pt2=(x+w//2,y+h//2),
+                    img=frame,
+                    pt1=(x-w//2, y-h//2),
+                    pt2=(x+w//2, y+h//2),
                     color=RECT_COLOR,
                     thickness=RECT_THICKNESS)
 
-        response.detections = Float64MultiArray(data=detected_objects)  
+        response.detections = Float64MultiArray(data=detected_objects)
         cv.imshow("Frame", frame)
         cv.waitKey(1)
 
         return response
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -107,4 +118,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-        

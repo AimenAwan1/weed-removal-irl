@@ -5,3 +5,4 @@ adafruit-circuitpython-bno08x
 adafruit-extended-bus
 pynmea2
 smbus2
+ultralytics
