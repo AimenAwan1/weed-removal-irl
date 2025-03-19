@@ -11,3 +11,8 @@ CMakeFiles
 build.ninja
 compile_commands.json
 CMakeCache.txt
+
+# just in case someone does a colcon build here by mistake
+log
+build
+install
