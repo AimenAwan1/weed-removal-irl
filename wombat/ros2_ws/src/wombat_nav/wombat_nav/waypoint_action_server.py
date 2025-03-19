@@ -4,7 +4,9 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 import rclpy
-from rclpy.action import ActionServer
+from rclpy.action import ActionServer, CancelResponse
+import rclpy.callback_groups
+import rclpy.executors
 from rclpy.node import Node
 
 from geometry_msgs.msg import Point, Twist
@@ -13,7 +15,7 @@ from nav_msgs.msg import Odometry
 from wombat_msgs.action import WaypointAction
 
 WAYPOINT_ACTION = "waypoint_action"
-WAYPOINT_FEEDBACK_RATE_HZ = 2
+WAYPOINT_ACTION_FEEDBACK_HZ = 2
 
 WAYPOINT_ERROR_DIST_THRESHOLD = 0.05
 
@@ -21,19 +23,23 @@ ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
-KP_LINEAR = 5.0
-KV_LINEAR = 0.001
-KI_LINEAR = 0.1
+KP_LINEAR = 0.8
+KV_LINEAR = 0.0 # 0.001
+KI_LINEAR = 0.2 # 0.5/2
 
-KP_ANGULAR = 5.0
-KV_ANGULAR = 0.01
-KI_ANGULAR = 0.2
+KP_ANGULAR = 1.5
+KV_ANGULAR = 0.0 # 0.1/1
+KI_ANGULAR = 0.0 # 0.5/2
+
+CONTROL_LOOP_TIMER_HZ = 20
 
 
 class WaypointActionServer(Node):
 
     def __init__(self):
         super().__init__("waypoint_action_server")
+        self.global_count_ = 0
+        self.callback_group = rclpy.callback_groups.ReentrantCallbackGroup()
 
         # run initialization
         self.current_position = Point(x=0.0, y=0.0)
@@ -44,37 +50,56 @@ class WaypointActionServer(Node):
 
         self.reset_error()
 
-        super._action_server = ActionServer(
-            self, WaypointAction, WAYPOINT_ACTION, self.execute_callback
+        self._action_server = ActionServer(
+            self, WaypointAction, WAYPOINT_ACTION, self.execute_callback,
+            callback_group=self.callback_group,
+            cancel_callback=self.cancel_callback
         )
+
         self.odom_subscription = self.create_subscription(
-            Odometry, ODOMETRY_TOPIC, self.odom_callback, 10
+            Odometry, ODOMETRY_TOPIC, self.odom_callback, 10,
+            callback_group=self.callback_group
         )
-        self.chassis_vel_publisher = self.create_publisher(Twist, CHASSIS_VEL_TOPIC, 10)
+        self.chassis_vel_publisher = self.create_publisher(
+            Twist, CHASSIS_VEL_TOPIC, 10)
+        self.create_timer(1.0 / CONTROL_LOOP_TIMER_HZ,
+                          self.control_loop_timer_callback)
 
     def reset_error(self):
         self.error = np.array([0, 0])
+        # self.prev_error_ang = 0 # angle of the error vector
+        # self.is_start_ang = True # just a switch to not apply error angle checking on first run
+
         self.prev_error_linear = 0
         self.prev_error_angular = 0
         self.integral_error_linear = 0
         self.integral_error_angular = 0
 
     def odom_callback(self, msg: Odometry):
+        self.get_logger().info("Received odom callback")
         self.current_position = msg.pose.pose.position
 
         q = msg.pose.pose.orientation
-        self.current_ang = Rotation.from_quat([q.w, q.x, q.y, q.z]).as_euler(
+        self.current_ang = Rotation.from_quat([q.x, q.y, q.z, q.w]).as_euler(
             "xyz", degrees=False
         )[2]
 
-    def timer_callback(self):
+    def cancel_callback(self, goal_handle):
+        self.get_logger().info("Received cancel request")
+        zero_speed = Twist()
+        self.chassis_vel_publisher.publish(zero_speed)
+        return CancelResponse.ACCEPT
+
+    def control_loop_timer_callback(self):
         if self.waypoint_nav_enabled:
+            self.get_logger().info('control loop active')
             self.error = np.array(
                 [
                     self.target_position.x - self.current_position.x,
                     self.target_position.y - self.current_position.y,
                 ]
             )
+            self.get_logger().info(f'current error: {self.error}')
 
             curr_time = self.get_clock().now()
             dt = (curr_time - self.prev_time).nanoseconds / 1e9
@@ -93,9 +118,26 @@ class WaypointActionServer(Node):
             )
 
             # angular velocity
-            error_angular = np.arctan2(self.error[0], self.error[1]) - self.current_ang
+            current_error_angle = np.arctan2(
+                self.error[1], self.error[0])
+            # if not self.is_start_ang and np.abs(current_error_angle - self.prev_error_ang) > np.pi/2:
+            #     current_error_angle = self.prev_error_ang
+            self.prev_error_ang = current_error_angle
+            # self.is_start_ang = False
+
+            current_angle = self.current_ang
+            if current_error_angle > 2*np.pi/3 or current_error_angle < -2*np.pi/3:
+                current_error_angle = (current_error_angle + 2*np.pi) % (2*np.pi)
+                current_angle = (current_angle + 2*np.pi) % (2*np.pi)
+
+            error_angular = current_error_angle - current_angle
+            self.get_logger().info(f"err_ang={np.arctan2(self.error[1], self.error[0])}, current_ang={self.current_ang}")
+            self.get_logger().info(f"adjusted error angular: {error_angular}, current_error_angle: {current_error_angle}, current_angle: {current_angle}")
             self.integral_error_angular += error_angular * dt
-            deriv_error_angular = (error_angular - self.prev_error_angular) / dt
+            self.get_logger().info(f"integral error: {self.integral_error_angular}")
+            deriv_error_angular = (
+                error_angular - self.prev_error_angular) / dt
+            self.get_logger().info(f"deriv_error_angular: {deriv_error_angular}")
             self.prev_error_angular = error_angular
 
             w = (
@@ -103,15 +145,25 @@ class WaypointActionServer(Node):
                 + KV_ANGULAR * deriv_error_angular
                 + KI_ANGULAR * self.integral_error_angular
             )
+            w = w if error_linear > 0.2 else 0.0
+
+            self.get_logger().info("before chassis vel publish")
+
+            self.get_logger().info(f"v: {v}, type={type(v)}")
+            self.get_logger().info(f"w: {w}, type={type(w)}")
 
             chassis_vel_msg = Twist()
-            chassis_vel_msg.linear.x = v
-            chassis_vel_msg.angular.z = w
+            chassis_vel_msg.linear.x = float(v)
+            chassis_vel_msg.angular.z = float(w)
             self.chassis_vel_publisher.publish(chassis_vel_msg)
+
+            self.get_logger().info("after chassis vel publish")
 
             # has reached the correct location
             if np.linalg.norm(self.error) < WAYPOINT_ERROR_DIST_THRESHOLD:
                 self.waypoint_nav_enabled = False
+        else:
+            self.get_logger().info("control loop disabled")
 
     def execute_callback(self, goal_handle):
         self.get_logger().info("Starting navigation to waypoint")
@@ -123,26 +175,38 @@ class WaypointActionServer(Node):
         self.reset_error()
 
         while self.waypoint_nav_enabled:
-            # track progress of control loop
+            # send updates on the progress of the control loop
 
             feedback_msg = WaypointAction.Feedback()
             feedback_msg.current = self.current_position
             goal_handle.publish_feedback(feedback_msg)
 
-            time.sleep(1.0 / WAYPOINT_FEEDBACK_RATE_HZ)
+            self.get_logger().info("after publish feedback")
+
+            time.sleep(1.0 / WAYPOINT_ACTION_FEEDBACK_HZ)
+
+            self.get_logger().info("after time sleep")
+
+        self.get_logger().info("terminated control loop")
+
+        zero_speed = Twist()
+        self.chassis_vel_publisher.publish(zero_speed)
 
         # finally reached waypoint
         goal_handle.succeed()
         result_msg = WaypointAction.Result()
         result_msg.final = self.current_position
         result_msg.error = Point(x=self.error[0], y=self.error[1])
+        
+        return result_msg
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = WaypointActionServer()
-    rclpy.spin(node)
-    node.destroy_node()
+    executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(node)
+    executor.spin()
     rclpy.shutdown()
 
 
