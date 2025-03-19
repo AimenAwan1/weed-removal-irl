@@ -37,10 +37,10 @@ def generate_launch_description():
             #     package="wombat_nav",
             #     executable="differential_drive_node",
             # ),
-            Node(
-                package="wombat_drivers",
-                executable="bno085_driver_node",
-            ),
+            #Node(
+            #    package="wombat_drivers",
+            #    executable="bno085_driver_node",
+            #),
             # visual odometry and mapping (taken primarily from the example
             # of using the real sense camera)
             SetParameter(name='depth_module.emitter_enabled', value=0),
