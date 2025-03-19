@@ -85,9 +85,10 @@ def generate_launch_description():
                 executable="static_transform_publisher",
                 arguments=[
                     "--x",
-                    "-0.362282519917305",
+                    "-0.089807621135332",
                     "--z",
-                    "-0.118221722886988",
+                    "-0.444448637286709",
+                    
                     "--pitch",
                     "-0.523598775598299",
                     "--frame-id",
@@ -101,9 +102,10 @@ def generate_launch_description():
                 executable="static_transform_publisher",
                 arguments=[
                     "--x",
-                    "-0.362282519917305",
+                    "-0.089807621135332",
                     "--z",
-                    "-0.118221722886988",
+                    "-0.444448637286709",
+                    
                     "--pitch",
                     "-0.523598775598299",
                     "--frame-id",
