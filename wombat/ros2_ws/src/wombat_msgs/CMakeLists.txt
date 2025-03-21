@@ -41,6 +41,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/WaypointAction.action"
   "action/TurnAction.action"
   "action/WeedsScanAction.action"
+  "action/WeedsSprayAction.action"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

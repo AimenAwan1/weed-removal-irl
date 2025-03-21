@@ -1,0 +1,8 @@
+# Request
+std_msgs/Float64MultiArray weed_locations
+---
+# Result (empty)
+std_msgs/Int32 total_weeds_visited
+---
+# Feedback
+std_msgs/Int32 current_weeds_visited
