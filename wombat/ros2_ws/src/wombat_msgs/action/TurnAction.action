@@ -1,0 +1,9 @@
+# Request
+std_msgs/Float32 target
+---
+# Result (empty)
+std_msgs/Float32 final
+std_msgs/Float32 error
+---
+# Feedback (empty)
+std_msgs/Float32 current

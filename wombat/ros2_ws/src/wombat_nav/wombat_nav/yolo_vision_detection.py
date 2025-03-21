@@ -7,9 +7,11 @@ import numpy as np
 from ultralytics import YOLO
 
 import rclpy
+import rclpy.callback_groups
+import rclpy.executors
 from rclpy.node import Node
 from wombat_msgs.srv import DetectObjects
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension, MultiArrayLayout
 from sensor_msgs.msg import Image
 
 from ament_index_python.packages import get_package_share_directory
@@ -24,7 +26,7 @@ from tf2_ros.transform_listener import TransformListener
 RECT_COLOR = (255, 0, 0)
 RECT_THICKNESS = 2
 
-CONFIDENCE_THRESHOLD = 0.8
+CONFIDENCE_THRESHOLD = 0.5
 
 INTEL_REALSENSE_COLOR_TOPIC = "/camera/color/image_raw"
 INTEL_REALSENSE_DEPTH_TOPIC = "/camera/depth/image_rect_raw"
@@ -50,9 +52,12 @@ WORLD_FRAME = "base_link_odom"
 class YoloVisionNode(Node):
     def __init__(self):
         super().__init__('yolo_vision')
+        self.global_count_ = 0
+        self.callback_group = rclpy.callback_groups.ReentrantCallbackGroup()
 
         self.service = self.create_service(
-            DetectObjects, "detect_objects", self.detect_callback
+            DetectObjects, "detect_objects", self.detect_callback,
+            callback_group=self.callback_group
         )
 
         self.bridge = CvBridge()
@@ -62,16 +67,16 @@ class YoloVisionNode(Node):
 
         package_share_directory = get_package_share_directory("wombat_nav")
         models_file = os.path.join(
-            package_share_directory, 'config', 'yolo_weights.pt')
+            package_share_directory, 'config', 'yolo_weights_model_2.pt')
 
         self.model = YOLO(model=models_file)
 
         self.get_logger().info("Vision node initialized")
 
         self.create_subscription(
-            Image, INTEL_REALSENSE_COLOR_TOPIC, self.colour_callback, 4)
+            Image, INTEL_REALSENSE_COLOR_TOPIC, self.colour_callback, 4, callback_group=self.callback_group)
         self.create_subscription(
-            Image, INTEL_REALSENSE_DEPTH_TOPIC, self.depth_callback, 4)
+            Image, INTEL_REALSENSE_DEPTH_TOPIC, self.depth_callback, 4, callback_group=self.callback_group)
 
         self.create_timer(1.0 / VISION_SAMPLING_RATE_HZ,
                           self.vision_sampling_timer_callback)
@@ -165,7 +170,14 @@ class YoloVisionNode(Node):
             self.get_logger().info(f"World frame: x={world_x}, y={world_y}, z={world_frame_position.point.z}")
             transformed_positions.extend([world_x, world_y])
 
-        response.detections = Float64MultiArray(data=transformed_positions)
+        print(transformed_positions)
+
+        # self.get_logger().info(f"{transformed_positions}")
+        # self.get_logger().info(f"{type(transformed_positions)}")
+        # self.get_logger().info(f"{type(transformed_positions[0])}")
+
+        # no numpy shenanigans
+        response.detections.data = [float(val) for val in transformed_positions]
         return response
 
     def run_detection(self, color_frame, depth_frame):
@@ -231,10 +243,9 @@ class YoloVisionNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = YoloVisionNode()
-
-    rclpy.spin(node)
-
-    node.destroy_node()
+    executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(node)
+    executor.spin()
     rclpy.shutdown()
 
 

@@ -39,6 +39,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/WheelVelocities.msg"
   "msg/EstWheelsVel.msg"
   "action/WaypointAction.action"
+  "action/TurnAction.action"
+  "action/WeedsScanAction.action"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

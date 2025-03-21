@@ -36,7 +36,9 @@ setup(
             'test1_waypoints = wombat_nav.test1_waypoints:main',
             'test2_waypoints = wombat_nav.test2_waypoints:main',
             'waypoint_action_server = wombat_nav.waypoint_action_server:main',
-            'yolo_vision_detection = wombat_nav.yolo_vision_detection'
+            'turn_action_server = wombat_nav.turn_action_server:main',
+            'weeds_scan_action_server = wombat_nav.weeds_scan_action_server:main',
+            'yolo_vision_detection = wombat_nav.yolo_vision_detection:main'
         ],
     },
 )

@@ -1,0 +1,7 @@
+# Request
+---
+# Result
+std_msgs/Float64MultiArray detections
+---
+# Feedback
+std_msgs/Float64MultiArray current_detections

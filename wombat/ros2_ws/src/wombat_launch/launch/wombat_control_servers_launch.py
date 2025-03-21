@@ -62,6 +62,7 @@ def generate_launch_description():
                     "enable_infra1": "true",
                     "enable_infra2": "true",
                     "enable_sync": "true",
+                    # "rgb_camera.color_profile": "1280x720x30",
                 }.items(),
             ),
             Node(
@@ -118,10 +119,23 @@ def generate_launch_description():
                 package="wombat_nav",
                 executable="odom_listener"
             ),
+            # add the yolo server
+            Node(
+                package="wombat_nav",
+                executable="yolo_vision_detection"
+            ),
             # add the action servers
             Node(
                 package="wombat_nav",
                 executable="waypoint_action_server"
+            ),
+            Node(
+                package="wombat_nav",
+                executable="turn_action_server"
+            ),
+            Node(
+                package="wombat_nav",
+                executable="weeds_scan_action_server"
             )
         ]
     )
