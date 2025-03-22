@@ -136,6 +136,10 @@ def generate_launch_description():
             Node(
                 package="wombat_nav",
                 executable="weeds_scan_action_server"
+            ),
+            Node(
+                package="wombat_nav",
+                executable="weeds_spray_action_server"
             )
         ]
     )

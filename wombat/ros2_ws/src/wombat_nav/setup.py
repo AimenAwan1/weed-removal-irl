@@ -38,7 +38,8 @@ setup(
             'waypoint_action_server = wombat_nav.waypoint_action_server:main',
             'turn_action_server = wombat_nav.turn_action_server:main',
             'weeds_scan_action_server = wombat_nav.weeds_scan_action_server:main',
-            'yolo_vision_detection = wombat_nav.yolo_vision_detection:main'
+            'yolo_vision_detection = wombat_nav.yolo_vision_detection:main',
+            'weeds_spray_action_server = wombat_nav.weeds_spray_action_server:main'
         ],
     },
 )

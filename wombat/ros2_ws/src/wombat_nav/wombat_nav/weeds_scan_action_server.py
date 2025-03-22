@@ -87,8 +87,10 @@ class WeedsScanActionServer(Node):
             print(f"More detections: {response.detections.data.tolist()}")
             self.send_feedback(goal_handle, detections)
 
-        response = WeedsScanAction.Response()
-        response.detections = detections
+        goal_handle.succeed()
+
+        response = WeedsScanAction.Result()
+        response.detections.data = detections
         return response
     
     def cancel_callback(self, goal_handle):
