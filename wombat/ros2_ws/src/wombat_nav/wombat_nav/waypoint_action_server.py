@@ -14,6 +14,8 @@ from nav_msgs.msg import Odometry
 
 from wombat_msgs.action import WaypointAction
 
+from utilities.error_angle import compute_err_angle 
+
 WAYPOINT_ACTION = "waypoint_action"
 WAYPOINT_ACTION_FEEDBACK_HZ = 2
 
@@ -127,11 +129,12 @@ class WaypointActionServer(Node):
                 self.error[1],
                 self.error[0])
 
-            if np.abs(current_error_angle) > 2*np.pi/3:
-                error_angular = (
-                    current_error_angle+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
-            else:
-                error_angular = current_error_angle - self.current_ang
+            error_angular = compute_err_angle(self.current_ang, current_error_angle)
+            # if np.abs(current_error_angle) > 2*np.pi/3:
+            #     error_angular = (
+            #         current_error_angle+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
+            # else:
+            #     error_angular = current_error_angle - self.current_ang
             error_angular = np.clip(
                 error_angular, a_min=-np.pi/6, a_max=np.pi/6)
 
