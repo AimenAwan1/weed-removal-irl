@@ -14,6 +14,8 @@ from nav_msgs.msg import Odometry
 
 from wombat_msgs.action import TurnAction
 
+from utilities.error_angle import compute_err_angle
+
 TURN_ACTION = "turn_action"
 TURN_ACTION_FEEDBACK_HZ = 2
 
@@ -92,18 +94,13 @@ class TurnActionServer(Node):
             # angular velocity
             target_ang = self.target_ang  # copies to apply transformation for wraparound handling
 
-            if target_ang > np.pi/2:
-                # target angle is in 2nd quadrant
-                pass
-            elif target_ang < np.pi/2:
-                # target angle is in 3rd quadrant
-                pass
+            error_angular = compute_err_angle(self.current_ang, target_ang)
 
-            if np.abs(target_ang) > 2*np.pi/3:
-                error_angular = (
-                    target_ang+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
-            else:
-                error_angular = target_ang - self.current_ang
+            # if np.abs(target_ang) > 2*np.pi/3:
+            #     error_angular = (
+            #         target_ang+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
+            # else:
+            #     error_angular = target_ang - self.current_ang
             error_angular = np.clip(
                 error_angular, a_min=-np.pi/6, a_max=np.pi/6)
 
