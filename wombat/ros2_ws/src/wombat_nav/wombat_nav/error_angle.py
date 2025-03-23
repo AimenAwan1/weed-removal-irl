@@ -2,14 +2,16 @@ import numpy as np
 
 
 def get_angle_quadrant(th):
-    if 0 <= th < np.pi / 2:
-        return 1
-    elif np.pi / 2 <= th <= np.pi:
-        return 2
-    elif -np.pi <= th <= -np.pi / 2:
-        return 3
+    if th >= 0:
+        if th <= np.pi/2:
+            return 1
+        else:
+            return 2
     else:
-        return 4
+        if th >= -np.pi/2:
+            return 4
+        else:
+            return 3
 
 
 def compute_ang_from_horiz(th):

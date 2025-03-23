@@ -14,7 +14,7 @@ from nav_msgs.msg import Odometry
 
 from wombat_msgs.action import TurnAction
 
-from utilities.error_angle import compute_err_angle
+from .error_angle import compute_err_angle
 
 TURN_ACTION = "turn_action"
 TURN_ACTION_FEEDBACK_HZ = 2
@@ -24,9 +24,9 @@ ODOMETRY_TOPIC = "/robot_position"
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
 # NOTE: these are the same gains as in the waypoint action server
-KP_ANGULAR = 1.4
+KP_ANGULAR = 1.5
 KV_ANGULAR = 0.0  # 0.1/1
-KI_ANGULAR = 0.00  # 0.5/2
+KI_ANGULAR = 0.0  # 0.5/2
 
 CONTROL_LOOP_TIMER_HZ = 30
 
@@ -95,6 +95,7 @@ class TurnActionServer(Node):
             target_ang = self.target_ang  # copies to apply transformation for wraparound handling
 
             error_angular = compute_err_angle(self.current_ang, target_ang)
+            self.get_logger().info(f"Pre cutoff error angular: {error_angular}")
 
             # if np.abs(target_ang) > 2*np.pi/3:
             #     error_angular = (

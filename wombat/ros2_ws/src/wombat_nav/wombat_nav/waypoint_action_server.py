@@ -14,7 +14,7 @@ from nav_msgs.msg import Odometry
 
 from wombat_msgs.action import WaypointAction
 
-from utilities.error_angle import compute_err_angle 
+from .error_angle import compute_err_angle 
 
 WAYPOINT_ACTION = "waypoint_action"
 WAYPOINT_ACTION_FEEDBACK_HZ = 2
@@ -29,13 +29,15 @@ KP_LINEAR = 1.0 # 0.8
 KV_LINEAR = 0.0  # 0.001
 KI_LINEAR = 0.0  # 0.5/2
 
-KP_ANGULAR = 1.4
+KP_ANGULAR = 1.5
 KV_ANGULAR = 0.0  # 0.1/1
 KI_ANGULAR = 0.0  # 0.5/2
 
 CONTROL_LOOP_TIMER_HZ = 30
 
-INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/24 # np.pi/6  # 30 degrees in alignment
+INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/48 # np.pi/6  # 30 degrees in alignment
+INITIAL_CONTROLLER_ALIGNMENT_TIME = 0.25
+
 # once this close turn off angle controller (prevents jumping)
 DISTANCE_TILL_ANGLE_SHUTOFF_M = 0.2
 
@@ -76,6 +78,7 @@ class WaypointActionServer(Node):
     def reset_error(self):
         self.error = np.array([0, 0])
         self.aligned_with_direction = False
+        self.initial_within_bound_time = 0.0
 
         self.prev_error_linear = 0
         self.prev_error_angular = 0
@@ -164,7 +167,11 @@ class WaypointActionServer(Node):
             # within an allowable distance (prevents situations where unpredictable behavior
             # occurs due to a waypoint being behind the robot)
             if np.abs(error_angular) < INITIAL_CONTROLLER_ALIGNMENT_RAD:
-                self.aligned_with_direction = True
+                self.initial_within_bound_time += dt
+                if self.initial_within_bound_time >= INITIAL_CONTROLLER_ALIGNMENT_TIME:
+                    self.aligned_with_direction = True
+            else:
+                self.initial_within_bound_time = 0.0
             v = v if self.aligned_with_direction else 0.0
             v = np.clip(v, a_min=0, a_max=MAX_SPEED_LIN_MS)
 
