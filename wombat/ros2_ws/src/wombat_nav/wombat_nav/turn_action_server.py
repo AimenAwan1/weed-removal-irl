@@ -24,12 +24,12 @@ CHASSIS_VEL_TOPIC = "/chassis_vel"
 # NOTE: these are the same gains as in the waypoint action server
 KP_ANGULAR = 1.4
 KV_ANGULAR = 0.0  # 0.1/1
-KI_ANGULAR = 0.0  # 0.5/2
+KI_ANGULAR = 0.00  # 0.5/2
 
 CONTROL_LOOP_TIMER_HZ = 30
 
-ALIGNMENT_ERROR_THRESHOLD_RAD = np.pi/24 # np.pi/6  # 30 degrees in alignment
-
+ALIGNMENT_ERROR_THRESHOLD_RAD = np.pi/48 # np.pi/6  # 30 degrees in alignment
+ALIGNMENT_SETTLED_TIME = 0.25
 
 class TurnActionServer(Node):
 
@@ -63,6 +63,7 @@ class TurnActionServer(Node):
 
     def reset_error(self):
         self.error = np.array([0, 0])
+        self.within_error_bound_time = 0.0
 
         self.prev_error_angular = 0
         self.integral_error_angular = 0
@@ -129,8 +130,12 @@ class TurnActionServer(Node):
             self.get_logger().info("after chassis vel publish")
 
             # has reached the correct location
-            if np.linalg.norm(error_angular) < ALIGNMENT_ERROR_THRESHOLD_RAD:
-                self.controller_enabled = False
+            if np.abs(error_angular) < ALIGNMENT_ERROR_THRESHOLD_RAD:
+                self.within_error_bound_time += dt
+                if self.within_error_bound_time >= ALIGNMENT_SETTLED_TIME:
+                    self.controller_enabled = False
+            else:
+                self.within_error_bound_time = 0.0
 
     def execute_callback(self, goal_handle):
         self.get_logger().info("Starting navigation to waypoint")
