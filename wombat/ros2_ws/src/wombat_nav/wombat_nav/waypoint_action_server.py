@@ -14,7 +14,7 @@ from nav_msgs.msg import Odometry
 
 from wombat_msgs.action import WaypointAction
 
-from .error_angle import compute_err_angle 
+from .error_angle import compute_err_angle
 
 WAYPOINT_ACTION = "waypoint_action"
 WAYPOINT_ACTION_FEEDBACK_HZ = 2
@@ -25,9 +25,9 @@ ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
-KP_LINEAR = 1.0 # 0.8
+KP_LINEAR = 1.0  # 0.8
 KV_LINEAR = 0.0  # 0.001
-KI_LINEAR = 0.0  # 0.5/2
+KI_LINEAR = 0.05  # 0.5/2
 
 KP_ANGULAR = 1.5
 KV_ANGULAR = 0.0  # 0.1/1
@@ -35,7 +35,8 @@ KI_ANGULAR = 0.0  # 0.5/2
 
 CONTROL_LOOP_TIMER_HZ = 30
 
-INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi/48 # np.pi/6  # 30 degrees in alignment
+INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi / \
+    48  # np.pi/6  # 30 degrees in alignment
 INITIAL_CONTROLLER_ALIGNMENT_TIME = 0.25
 
 # once this close turn off angle controller (prevents jumping)
@@ -132,7 +133,8 @@ class WaypointActionServer(Node):
                 self.error[1],
                 self.error[0])
 
-            error_angular = compute_err_angle(self.current_ang, current_error_angle)
+            error_angular = compute_err_angle(
+                self.current_ang, current_error_angle)
             # if np.abs(current_error_angle) > 2*np.pi/3:
             #     error_angular = (
             #         current_error_angle+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
@@ -177,7 +179,8 @@ class WaypointActionServer(Node):
 
             # prevents jumping when a bit of overshoot results in the error vector inverting
             # causing the robot to begin spinning around before shutting off as within allowances
-            w = w if error_linear > DISTANCE_TILL_ANGLE_SHUTOFF_M else 0.0
+            # NOTE: always allow rotation if within the initial alignment phase
+            w = w if not self.aligned_with_direction or error_linear > DISTANCE_TILL_ANGLE_SHUTOFF_M else 0.0
 
             self.get_logger().info("before chassis vel publish")
 
@@ -191,9 +194,10 @@ class WaypointActionServer(Node):
 
             self.get_logger().info("after chassis vel publish")
 
-            # has reached the correct location
-            if np.linalg.norm(self.error) < WAYPOINT_ERROR_DIST_THRESHOLD:
-                self.waypoint_nav_enabled = False
+            # only check has reached the correct location after the initial rotation has been made
+            if self.aligned_with_direction:
+                if np.linalg.norm(self.error) < WAYPOINT_ERROR_DIST_THRESHOLD:
+                    self.waypoint_nav_enabled = False
 
     def execute_callback(self, goal_handle):
         self.get_logger().info("Starting navigation to waypoint")
