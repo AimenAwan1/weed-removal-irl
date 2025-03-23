@@ -25,7 +25,7 @@ WAYPOINT_ERROR_DIST_THRESHOLD = 0.03
 ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
-CONTROL_LOOP_TIMER_HZ = 30
+CONTROL_LOOP_TIMER_HZ = 50
 
 INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi / \
     48  # np.pi/6  # 30 degrees in alignment

@@ -24,7 +24,7 @@ ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
-CONTROL_LOOP_TIMER_HZ = 30
+CONTROL_LOOP_TIMER_HZ = 50
 
 ALIGNMENT_ERROR_THRESHOLD_RAD = np.pi/48  # np.pi/6  # 30 degrees in alignment
 ALIGNMENT_SETTLED_TIME = 0.25
