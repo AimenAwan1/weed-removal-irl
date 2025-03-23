@@ -1,0 +1,7 @@
+KP_LINEAR = 0.9  # 0.8
+KV_LINEAR = 0.0  # 0.001
+KI_LINEAR = 0.2  # 0.5/2
+
+KP_ANGULAR = 1.4
+KV_ANGULAR = 0.0  # 0.1/1
+KI_ANGULAR = 0.1  # 0.5/2

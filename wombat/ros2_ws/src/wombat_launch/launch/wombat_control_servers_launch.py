@@ -86,12 +86,12 @@ def generate_launch_description():
                 executable="static_transform_publisher",
                 arguments=[
                     "--x",
-                    "-0.089807621135332",
+                    "-0.1508",
                     "--z",
-                    "-0.444448637286709",
+                    "-0.4276",
                     
                     "--pitch",
-                    "-0.523598775598299",
+                    "-0.3840",
                     "--frame-id",
                     "odom",
                     "--child-frame-id",
@@ -103,12 +103,12 @@ def generate_launch_description():
                 executable="static_transform_publisher",
                 arguments=[
                     "--x",
-                    "-0.089807621135332",
+                    "-0.1508",
                     "--z",
-                    "-0.444448637286709",
+                    "-0.4276",
                     
                     "--pitch",
-                    "-0.523598775598299",
+                    "-0.3840",
                     "--frame-id",
                     "camera_link",
                     "--child-frame-id",

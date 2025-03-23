@@ -15,6 +15,7 @@ from nav_msgs.msg import Odometry
 from wombat_msgs.action import WaypointAction
 
 from .error_angle import compute_err_angle
+from .controller_gains import *
 
 WAYPOINT_ACTION = "waypoint_action"
 WAYPOINT_ACTION_FEEDBACK_HZ = 2
@@ -24,15 +25,6 @@ WAYPOINT_ERROR_DIST_THRESHOLD = 0.03
 ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
-
-KP_LINEAR = 1.0  # 0.8
-KV_LINEAR = 0.0  # 0.001
-KI_LINEAR = 0.05  # 0.5/2
-
-KP_ANGULAR = 1.5
-KV_ANGULAR = 0.0  # 0.1/1
-KI_ANGULAR = 0.0  # 0.5/2
-
 CONTROL_LOOP_TIMER_HZ = 30
 
 INITIAL_CONTROLLER_ALIGNMENT_RAD = np.pi / \
@@ -197,6 +189,11 @@ class WaypointActionServer(Node):
             # only check has reached the correct location after the initial rotation has been made
             if self.aligned_with_direction:
                 if np.linalg.norm(self.error) < WAYPOINT_ERROR_DIST_THRESHOLD:
+                    self.waypoint_nav_enabled = False
+            else:
+                # once initial alignment has occurred if the error angle increases by over pi/4
+                # then it means we have overshoot and are trying to do the loop of shame
+                if np.abs(error_angular) > np.pi/4:
                     self.waypoint_nav_enabled = False
 
     def execute_callback(self, goal_handle):

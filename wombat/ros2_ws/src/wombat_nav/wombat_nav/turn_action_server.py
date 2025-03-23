@@ -15,6 +15,7 @@ from nav_msgs.msg import Odometry
 from wombat_msgs.action import TurnAction
 
 from .error_angle import compute_err_angle
+from .controller_gains import *
 
 TURN_ACTION = "turn_action"
 TURN_ACTION_FEEDBACK_HZ = 2
@@ -23,15 +24,11 @@ ODOMETRY_TOPIC = "/robot_position"
 
 CHASSIS_VEL_TOPIC = "/chassis_vel"
 
-# NOTE: these are the same gains as in the waypoint action server
-KP_ANGULAR = 1.5
-KV_ANGULAR = 0.0  # 0.1/1
-KI_ANGULAR = 0.0  # 0.5/2
-
 CONTROL_LOOP_TIMER_HZ = 30
 
-ALIGNMENT_ERROR_THRESHOLD_RAD = np.pi/48 # np.pi/6  # 30 degrees in alignment
+ALIGNMENT_ERROR_THRESHOLD_RAD = np.pi/48  # np.pi/6  # 30 degrees in alignment
 ALIGNMENT_SETTLED_TIME = 0.25
+
 
 class TurnActionServer(Node):
 
@@ -86,7 +83,7 @@ class TurnActionServer(Node):
     def control_loop_timer_callback(self):
         if self.controller_enabled:
             self.get_logger().info('control loop active')
-            
+
             curr_time = self.get_clock().now()
             dt = (curr_time - self.prev_time).nanoseconds / 1e9
             self.prev_time = curr_time
@@ -95,7 +92,8 @@ class TurnActionServer(Node):
             target_ang = self.target_ang  # copies to apply transformation for wraparound handling
 
             error_angular = compute_err_angle(self.current_ang, target_ang)
-            self.get_logger().info(f"Pre cutoff error angular: {error_angular}")
+            self.get_logger().info(
+                f"Pre cutoff error angular: {error_angular}")
 
             # if np.abs(target_ang) > 2*np.pi/3:
             #     error_angular = (

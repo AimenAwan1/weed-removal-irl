@@ -21,6 +21,7 @@ DISTANCE_EPSILON = 1e-3
 WAYPOINT_ACTION = "waypoint_action"  # action server to allow movement
 TURN_ACTION = "turn_action"  # action server to allow turning
 
+ODOMETRY_TOPIC = "/robot_position"
 
 class WeedsSprayActionServer(Node):
     def __init__(self):
@@ -45,6 +46,11 @@ class WeedsSprayActionServer(Node):
         )
         self.turn_action_client = ActionClient(
             self, TurnAction, TURN_ACTION, callback_group=self.callback_group)
+        
+        self.odom_subscription = self.create_subscription(
+            Odometry, ODOMETRY_TOPIC, self.odom_callback, 10,
+            callback_group=self.callback_group
+        )
 
         self.get_logger().info("Initialized the weeds spray action server...")
 
