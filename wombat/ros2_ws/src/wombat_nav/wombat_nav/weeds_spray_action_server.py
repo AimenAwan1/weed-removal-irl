@@ -13,7 +13,10 @@ from nav_msgs.msg import Odometry
 
 
 WEEDS_SPRAY_ACTION = "weeds_spray_action"
-WEED_SEPARATION_DIST = 0.2
+WEED_SEPARATION_DIST = 0.1
+CHASSIS_WIDTH_M = 0.4508
+
+DISTANCE_EPSILON = 1e-3
 
 WAYPOINT_ACTION = "waypoint_action"  # action server to allow movement
 
@@ -77,9 +80,14 @@ class WeedsSprayActionServer(Node):
             error_to_target = weed_pos - current_pos
             dist_to_target = np.linalg.norm(error_to_target)
 
-            error_to_target_dir = error_to_target / dist_to_target
+            if dist_to_target < DISTANCE_EPSILON:
+                # must move along an arbitrary direction to get within range of the waypoint
+                error_to_target_dir = np.array([1.0, 0.0])
+            else:
+                # can move to a location along the axis joining the current location and weed
+                error_to_target_dir = error_to_target / dist_to_target
 
-            dist_to_auxiliarly = dist_to_target - WEED_SEPARATION_DIST
+            dist_to_auxiliarly = dist_to_target - (CHASSIS_WIDTH_M / 2 + WEED_SEPARATION_DIST)
             auxiliary_point = current_pos + dist_to_auxiliarly * error_to_target_dir
 
             # navigate to this point prior to activating the sprayer

@@ -92,6 +92,13 @@ class TurnActionServer(Node):
             # angular velocity
             target_ang = self.target_ang  # copies to apply transformation for wraparound handling
 
+            if target_ang > np.pi/2:
+                # target angle is in 2nd quadrant
+                pass
+            elif target_ang < np.pi/2:
+                # target angle is in 3rd quadrant
+                pass
+
             if np.abs(target_ang) > 2*np.pi/3:
                 error_angular = (
                     target_ang+2*np.pi) % (2*np.pi) - (self.current_ang+2*np.pi) % (2*np.pi)
