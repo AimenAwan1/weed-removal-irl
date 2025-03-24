@@ -67,7 +67,7 @@ class YoloVisionNode(Node):
 
         package_share_directory = get_package_share_directory("wombat_nav")
         models_file = os.path.join(
-            package_share_directory, 'config', 'yolo_weights_model_2.pt')
+            package_share_directory, 'config', 'model_1.pt')
 
         self.model = YOLO(model=models_file)
 
