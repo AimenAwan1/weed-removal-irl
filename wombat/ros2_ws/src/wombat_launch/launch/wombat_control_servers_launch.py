@@ -16,6 +16,7 @@ def generate_launch_description():
             "frame_id": "camera_link",
             "subscribe_stereo": True,
             "subscribe_odom_info": True,
+            "approx_sync": True
         }
     ]
     vod_remappings = [
@@ -44,7 +45,7 @@ def generate_launch_description():
             # visual odometry and mapping (taken primarily from the example
             # of using the real sense camera)
             # Hack to disable IR emitter
-            SetParameter(name='depth_module.emitter_enabled', value=0),
+            SetParameter(name='depth_module.emitter_enabled', value=1),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     [
@@ -62,6 +63,7 @@ def generate_launch_description():
                     "enable_infra1": "true",
                     "enable_infra2": "true",
                     "enable_sync": "true",
+                    #"align_depth.enable": "true"
                     # "rgb_camera.color_profile": "1280x720x30",
                 }.items(),
             ),
@@ -89,7 +91,7 @@ def generate_launch_description():
                     "-0.1508",
                     "--z",
                     "-0.4276",
-                    
+
                     "--pitch",
                     "-0.3840",
                     "--frame-id",
@@ -106,7 +108,7 @@ def generate_launch_description():
                     "-0.1508",
                     "--z",
                     "-0.4276",
-                    
+
                     "--pitch",
                     "-0.3840",
                     "--frame-id",

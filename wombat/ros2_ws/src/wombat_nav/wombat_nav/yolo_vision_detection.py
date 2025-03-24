@@ -26,7 +26,7 @@ from tf2_ros.transform_listener import TransformListener
 RECT_COLOR = (255, 0, 0)
 RECT_THICKNESS = 2
 
-CONFIDENCE_THRESHOLD = 0.5
+CONFIDENCE_THRESHOLD = 0.2
 
 INTEL_REALSENSE_COLOR_TOPIC = "/camera/color/image_raw"
 INTEL_REALSENSE_DEPTH_TOPIC = "/camera/depth/image_rect_raw"
@@ -48,6 +48,8 @@ CAMERA_V0 = 252.5470733642578
 CAMERA_FRAME = "camera_color_optical_frame"
 WORLD_FRAME = "base_link_odom"
 
+MODEL = "model_1.pt"
+
 
 class YoloVisionNode(Node):
     def __init__(self):
@@ -67,7 +69,7 @@ class YoloVisionNode(Node):
 
         package_share_directory = get_package_share_directory("wombat_nav")
         models_file = os.path.join(
-            package_share_directory, 'config', 'model_1.pt')
+            package_share_directory, 'config', MODEL)
 
         self.model = YOLO(model=models_file)
 
@@ -190,8 +192,12 @@ class YoloVisionNode(Node):
         print(f"color frame shape: {color_frame.shape}")
         print(f"depth frame shape: {depth_frame.shape}")
 
-        frame_width = color_frame.shape[0]
+        frame_width = color_frame.shape[1]
+        frame_height = color_frame.shape[0]
         frame_center = frame_width//2
+
+        self.get_logger().info(f"color frame shape: {color_frame.shape}")
+        self.get_logger().info(f"depth frame shape: {depth_frame.shape}")
 
         detected_objects = []
 
@@ -205,6 +211,8 @@ class YoloVisionNode(Node):
                 if confidences[i] < CONFIDENCE_THRESHOLD:
                     continue
 
+                self.get_logger().info(f"i: {i}")
+
                 print(f"confidence: {confidences[i]}")
 
                 x = int(xywh[i, 0])
@@ -212,8 +220,29 @@ class YoloVisionNode(Node):
                 w = int(xywh[i, 2])
                 h = int(xywh[i, 3])
 
-                distance_pitched = depth_frame[y,
-                                               x] * DEPTH_SCALING_FACTOR_TO_M
+                if w > frame_width/2 or h > frame_height/2:
+                    continue
+
+                color_frame = cv.rectangle(
+                    img=color_frame,
+                    pt1=(x-w//2, y-h//2),
+                    pt2=(x+w//2, y+h//2),
+                    color=RECT_COLOR,
+                    thickness=RECT_THICKNESS)
+                
+                # must find the remapped depth pixel (given rgb and depth map do not exactly match)
+                camera_fraction_x = x / frame_width
+                camera_fraction_y = y / frame_height
+
+                depth_x = int(depth_frame.shape[1] * (130/550 + (410-130)/550*camera_fraction_x))
+                depth_y = int(depth_frame.shape[0] * (40/300 + (240-40)/300*camera_fraction_y))
+                
+                distance_pitched_raw = depth_frame[depth_y, depth_x]
+                self.get_logger().info(f"distance_pitched_raw: {distance_pitched_raw}")
+
+                distance_pitched = distance_pitched_raw*DEPTH_SCALING_FACTOR_TO_M
+                self.get_logger().info(f"distance_pitched: {distance_pitched}")
+
                 distance = distance_pitched / \
                     math.cos(math.radians(PITCH_ANGLE_DEG))
                 angle = (x - frame_center) / frame_width * \
@@ -230,12 +259,7 @@ class YoloVisionNode(Node):
                 # detected_objects.append(float(distance))
                 # detected_objects.append(float(angle))
 
-                color_frame = cv.rectangle(
-                    img=color_frame,
-                    pt1=(x-w//2, y-h//2),
-                    pt2=(x+w//2, y+h//2),
-                    color=RECT_COLOR,
-                    thickness=RECT_THICKNESS)
+                
 
         return color_frame, detected_objects
 
